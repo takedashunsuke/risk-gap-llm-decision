@@ -1,0 +1,22 @@
+# 設計書 v2 向けデモ Web（apps/demo_web）。ビルドはリポジトリルートから:
+#   docker build -f docker/Dockerfile.web -t llm-demo-web .
+
+FROM python:3.11-slim-bookworm
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+COPY apps/demo_web/requirements.txt ./requirements-demo.txt
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r requirements-demo.txt
+
+COPY apps/demo_web/ ./demo_web/
+
+# Compose では ../output:/app/output と DEMO_OUTPUT_DIR=/app/output（demo_runs.jsonl）
+WORKDIR /app/demo_web
+
+EXPOSE 8765
+
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8765"]

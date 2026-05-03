@@ -1,0 +1,6 @@
+# 参考実装・ローカル実験用（リポジトリには含めない）
+sample/
+
+# デモ Web の JSONL など（ホスト実行・Compose マウント先）
+output/*
+!output/.gitkeep

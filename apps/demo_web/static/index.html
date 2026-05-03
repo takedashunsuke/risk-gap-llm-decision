@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>risk-gap-llm-decision — 意思決定デモ</title>
+  <link rel="stylesheet" href="/static/css/demo.css" />
+</head>
+<body>
+  <div class="app-layout">
+    <header class="app-header">
+      <h1>過信と判断 — ミニシミュレーション</h1>
+      <p class="lead">
+        <strong>R_obj</strong>（客観リスク）が上がり、<strong>R_subj</strong>（主観）が追いつかず
+        <strong>Gap</strong> が開く過程を、左のグラフと「登山」のメタファで眺めながら、右で数値と判断を確認できます。
+      </p>
+      <span class="project-slug" title="リポジトリ名の例">risk-gap-llm-decision</span>
+    </header>
+
+    <main class="app-shell">
+      <section class="col col-left" aria-label="グラフと登山道">
+        <div class="toolbar">
+          <label>上限 <input type="range" id="max-steps" min="10" max="100" value="40" /> <span id="max-steps-val">40</span></label>
+          <div class="row-btn">
+            <button type="button" id="btn-reset">リセット</button>
+            <button type="button" id="btn-advance">次のステップ</button>
+            <button type="button" class="ghost" id="btn-autoplay">自動再生</button>
+          </div>
+          <span class="step-pill" id="step-label"></span>
+        </div>
+
+        <div class="viz-card chart-grow">
+          <h2>リスクの推移（0〜1）</h2>
+          <div id="chart-wrap">
+            <canvas id="chart" width="400" height="200"></canvas>
+          </div>
+          <div class="chart-legend">
+            <span><i class="swatch" style="background:#7c9cff;"></i>R_obj</span>
+            <span><i class="swatch" style="background:#fbbf24;"></i>R_subj</span>
+            <span><i class="swatch" style="background:#f87171;"></i>Gap</span>
+            <span><i class="swatch" style="background:#94a3b8;"></i>Cost_stop</span>
+          </div>
+        </div>
+
+        <div class="viz-card trail-box">
+          <h2>登山道ロールプレイ（進捗・危険度）</h2>
+          <div class="trail-scene">
+            <svg id="trail-svg" viewBox="0 0 400 110" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <defs>
+                <linearGradient id="trail-sky" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#1e3a8a" stop-opacity="0.55" />
+                  <stop offset="55%" stop-color="#1e293b" stop-opacity="0.9" />
+                  <stop offset="100%" stop-color="#0c1222" />
+                </linearGradient>
+                <linearGradient id="trail-veil-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#7f1d1d" stop-opacity="0.45" />
+                  <stop offset="100%" stop-color="#0c0a09" stop-opacity="0.82" />
+                </linearGradient>
+              </defs>
+              <rect x="0" y="0" width="400" height="110" fill="url(#trail-sky)" rx="6" />
+              <ellipse class="trail-cloud trail-cloud--a" cx="72" cy="26" rx="40" ry="11" fill="#94a3b8" opacity="0.4" />
+              <ellipse class="trail-cloud trail-cloud--b" cx="260" cy="22" rx="48" ry="14" fill="#64748b" opacity="0.35" />
+              <ellipse class="trail-cloud trail-cloud--c" cx="360" cy="30" rx="32" ry="10" fill="#475569" opacity="0.28" />
+              <rect id="trail-veil" x="0" y="0" width="400" height="110" fill="url(#trail-veil-grad)" opacity="0" style="pointer-events: none" />
+              <path
+                id="trail-path"
+                fill="none"
+                stroke="rgba(255,255,255,0.38)"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <g id="trail-hiker-root" transform="translate(22,44)">
+                <g id="trail-hiker-inner" class="trail-hiker-inner">
+                  <rect x="-12" y="-10" width="9" height="13" rx="2" fill="#44403c" opacity="0.92" />
+                  <circle cx="0" cy="-17" r="5.5" fill="#fde68a" stroke="#292524" stroke-width="1" />
+                  <path
+                    d="M0,-12 L0,7 M-10,-3 L10,-3 M-8,24 L0,7 L8,24"
+                    stroke="#e2e8f0"
+                    stroke-width="2.3"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </g>
+              </g>
+              <text x="10" y="18" fill="rgba(255,255,255,0.5)" font-size="10">登山口</text>
+              <text x="318" y="18" fill="rgba(255,255,255,0.38)" font-size="10">上方エリア</text>
+            </svg>
+          </div>
+          <p class="trail-caption" id="trail-caption"></p>
+        </div>
+      </section>
+
+      <section class="col col-right" aria-label="数値と判断">
+        <div class="right-stack">
+          <div id="banner" class="banner" role="status"></div>
+
+          <div class="grid" id="metrics-root"></div>
+
+          <div class="card breakdown-card">
+            <h3>Risk 内訳（環境 / 人 / 時間）</h3>
+            <div class="subgrid" id="breakdown"></div>
+          </div>
+
+          <div class="decision-block">
+            <div class="row-btn" id="decision-row">
+              <button type="button" class="danger" id="btn-continue" disabled>続行（過信）</button>
+              <button type="button" class="safe" id="btn-llm" disabled>LLM 介入 → 中止</button>
+            </div>
+            <p class="decision-hint" id="decision-hint">上限ステップまで進むと分岐できます。</p>
+          </div>
+
+          <div id="llm-wrap" class="llm-panel">
+            <h3>LLM メッセージ（任意）</h3>
+            <pre class="llm" id="llm-text"></pre>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script defer src="/static/js/demo.js"></script>
+</body>
+</html>

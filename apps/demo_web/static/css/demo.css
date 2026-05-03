@@ -1,0 +1,478 @@
+/**
+ * Risk Gap LLM Decision — デモ UI
+ * 将来フロントを別パッケージに切り出すときの土台（API は /api/* を想定）
+ */
+:root {
+  --bg: #0f1220;
+  --card: #171a2e;
+  --text: #e8e9ef;
+  --muted: #989aaf;
+  --accent: #7c9cff;
+  --danger: #f87171;
+  --ok: #4ade80;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.4;
+}
+
+/* 画面全体：ヘッダー + 2 カラム */
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+}
+
+.app-header {
+  flex-shrink: 0;
+  padding: 0.45rem 0.85rem 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(
+    180deg,
+    rgba(30, 32, 55, 0.92) 0%,
+    rgba(15, 18, 32, 0.98) 100%
+  );
+}
+
+.app-header h1 {
+  font-size: 1.05rem;
+  margin: 0 0 0.2rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.app-header .lead {
+  color: var(--muted);
+  margin: 0;
+  font-size: 0.74rem;
+  line-height: 1.45;
+  max-width: 72ch;
+}
+
+.app-header .project-slug {
+  display: block;
+  font-size: 0.65rem;
+  color: rgba(152, 154, 175, 0.85);
+  margin-top: 0.25rem;
+  font-family: ui-monospace, monospace;
+}
+
+.app-shell {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.65rem;
+  padding: 0.45rem 0.75rem 0.55rem;
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.65rem;
+  margin-top: 0.15rem;
+  flex-shrink: 0;
+}
+
+.toolbar label {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+input[type="range"] {
+  width: 120px;
+  vertical-align: middle;
+}
+
+#max-steps-val {
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.row-btn {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+button {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff;
+  border: none;
+  padding: 0.38rem 0.75rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+button.danger {
+  background: linear-gradient(135deg, #dc2626, #ea580c);
+}
+
+button.safe {
+  background: linear-gradient(135deg, #059669, #16a34a);
+}
+
+button.ghost {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+button.ghost.active {
+  background: rgba(99, 102, 241, 0.35);
+  border-color: rgba(129, 140, 248, 0.5);
+}
+
+.step-pill {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.viz-card {
+  background: var(--card);
+  border-radius: 10px;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.viz-card h2 {
+  margin: 0 0 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text);
+  flex-shrink: 0;
+}
+
+.viz-card.chart-grow {
+  flex: 1;
+  margin-top: 0.35rem;
+}
+
+#chart-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 80px;
+  width: 100%;
+}
+
+#chart {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.65rem;
+  justify-content: center;
+  font-size: 0.65rem;
+  color: var(--muted);
+  margin-top: 0.35rem;
+  flex-shrink: 0;
+}
+
+.chart-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.swatch {
+  width: 10px;
+  height: 2px;
+  border-radius: 1px;
+  display: inline-block;
+}
+
+/* —— 登山道シーン（ロールプレイ風） —— */
+.trail-box {
+  flex-shrink: 0;
+  margin-top: 0.35rem;
+  max-height: 32%;
+}
+
+.trail-box h2 {
+  margin-bottom: 0.2rem;
+}
+
+.trail-scene {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.35);
+}
+
+.trail-scene--pulse {
+  animation: trail-scene-flash 0.55s ease-out;
+}
+
+@keyframes trail-scene-flash {
+  0% {
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.15),
+      0 0 12px rgba(99, 102, 241, 0.35);
+  }
+  100% {
+    box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.35);
+  }
+}
+
+#trail-svg {
+  width: 100%;
+  height: auto;
+  max-height: 96px;
+  display: block;
+  vertical-align: middle;
+}
+
+.trail-cloud {
+  opacity: 0.35;
+  animation: trail-cloud-drift 18s linear infinite;
+}
+
+.trail-cloud--b {
+  animation-duration: 24s;
+  animation-direction: reverse;
+}
+
+.trail-cloud--c {
+  animation-duration: 21s;
+  opacity: 0.22;
+}
+
+@keyframes trail-cloud-drift {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-24px);
+  }
+}
+
+#trail-path {
+  transition: stroke 0.35s ease, stroke-width 0.25s ease;
+}
+
+.trail-scene--danger #trail-path {
+  stroke: rgba(248, 113, 113, 0.55);
+}
+
+.trail-hiker-inner {
+  transform-origin: 0 8px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .trail-hiker-inner--walk {
+    animation: trail-hiker-bob 0.52s ease-in-out infinite;
+  }
+
+  .trail-scene--pulse #trail-path {
+    animation: trail-path-pulse 0.5s ease-out;
+  }
+}
+
+@keyframes trail-hiker-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes trail-path-pulse {
+  0% {
+    stroke-width: 3.5;
+    stroke: rgba(129, 140, 248, 0.65);
+  }
+  100% {
+    stroke-width: 2;
+    stroke: rgba(255, 255, 255, 0.35);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trail-cloud {
+    animation: none;
+  }
+
+  .trail-hiker-inner--walk {
+    animation: none;
+  }
+
+  .trail-scene--pulse {
+    animation: none;
+  }
+}
+
+.trail-caption {
+  font-size: 0.65rem;
+  color: var(--muted);
+  text-align: center;
+  margin: 0.2rem 0 0;
+  line-height: 1.35;
+}
+
+.banner {
+  padding: 0.4rem 0.55rem;
+  border-radius: 8px;
+  margin-bottom: 0.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: none;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.banner.show {
+  display: block;
+}
+
+.banner.accident {
+  background: rgba(248, 113, 113, 0.12);
+  border-color: rgba(248, 113, 113, 0.35);
+}
+
+.banner.avoided {
+  background: rgba(74, 222, 128, 0.12);
+  border-color: rgba(74, 222, 128, 0.35);
+}
+
+.right-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+  min-height: 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.card {
+  background: var(--card);
+  border-radius: 8px;
+  padding: 0.35rem 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.card h3 {
+  margin: 0 0 0.15rem;
+  font-size: 0.58rem;
+  color: var(--muted);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.card .val {
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.breakdown-card .subgrid {
+  font-size: 0.68rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.decision-hint {
+  color: var(--muted);
+  font-size: 0.68rem;
+  margin: 0.2rem 0 0;
+}
+
+.llm-panel {
+  flex: 1;
+  min-height: 0;
+  display: none;
+  flex-direction: column;
+}
+
+.llm-panel.show {
+  display: flex;
+}
+
+.llm-panel h3 {
+  margin: 0 0 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+pre.llm {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  white-space: pre-wrap;
+  background: #111427;
+  padding: 0.45rem 0.55rem;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  margin: 0;
+}
+
+@media (max-width: 860px) {
+  html,
+  body {
+    overflow: auto;
+    height: auto;
+    min-height: 100%;
+  }
+
+  .app-layout {
+    height: auto;
+    max-height: none;
+    min-height: 100vh;
+    overflow: visible;
+  }
+
+  .app-shell {
+    grid-template-columns: 1fr;
+    flex: none;
+  }
+}

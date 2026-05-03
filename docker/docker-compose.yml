@@ -1,0 +1,43 @@
+# FastAPI デモ Web（apps/demo_web）。LLM はホストの Ollama（Mac では Metal 利用しやすい）。
+#
+# 事前準備（ホスト）:
+#   - [Ollama](https://ollama.com/download) をインストールし、アプリで起動するか `ollama serve`
+#   - `ollama pull <Compose の OLLAMA_MODEL と同じモデル>`（任意）
+#
+# リポジトリルートで:
+#   docker compose -f docker/docker-compose.yml build
+#   docker compose -f docker/docker-compose.yml up
+#
+# Web UI: http://localhost:8765
+#
+# web は apps/demo_web をボリュームマウントし uvicorn --reload のため、
+# HTML/Python の変更は再 build なしで反映（保存でリロード）。
+# 再 build が必要なのはほぼ Dockerfile.web か apps/demo_web/requirements.txt を変えたとき。
+#
+# 詳細は docs/CLAUDE.md の「Docker（ホスト Ollama）」を参照。
+
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.web
+    ports:
+      - "8765:8765"
+    environment:
+      DEMO_OUTPUT_DIR: /app/output
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+      OLLAMA_MODEL: llama3.2:1b
+    volumes:
+      - ../output:/app/output
+      - ../apps/demo_web:/app/demo_web
+    working_dir: /app/demo_web
+    command:
+      - uvicorn
+      - app:app
+      - --host
+      - "0.0.0.0"
+      - --port
+      - "8765"
+      - --reload
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

@@ -1,0 +1,4 @@
+# デモ用 Web（demo_web）。本体シミュの Docker イメージには含めない想定。
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+requests>=2.31.0
