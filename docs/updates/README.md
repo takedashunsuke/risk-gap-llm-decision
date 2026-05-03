@@ -7,3 +7,4 @@
 | ファイル | 内容 |
 |----------|------|
 | `2026-04-19-from-initial-to-current.md` | Docker / Ollama 周りの変更の流れ（2026-04-19 前後） |
+| `2026-05-03-demo-web-ui-and-rp-narrative.md` | demo_web の Bootstrap UI・パーティ登山・`rp_zone`・結果モーダル・スクロール／トレイル枠の安定化（2026-05 前後） |

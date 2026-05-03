@@ -4,122 +4,219 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>risk-gap-llm-decision — 意思決定デモ</title>
-  <link rel="stylesheet" href="/static/css/demo.css" />
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+    crossorigin="anonymous"
+  />
+  <link rel="stylesheet" href="/static/css/demo.css?v=rp-v6" />
+  <link rel="stylesheet" href="/static/css/character1.css?v=rp-v6" />
+  <link rel="stylesheet" href="/static/css/character2.css?v=rp-v6" />
+  <link rel="stylesheet" href="/static/css/character3.css?v=rp-v6" />
 </head>
-<body>
-  <div class="app-layout">
-    <header class="app-header">
-      <h1>過信と判断 — ミニシミュレーション</h1>
-      <p class="lead">
-        <strong>R_obj</strong>（客観リスク）が上がり、<strong>R_subj</strong>（主観）が追いつかず
-        <strong>Gap</strong> が開く過程を、左のグラフと「登山」のメタファで眺めながら、右で数値と判断を確認できます。
-      </p>
-      <span class="project-slug" title="リポジトリ名の例">risk-gap-llm-decision</span>
+<body class="demo-body bg-light">
+  <div class="app-layout d-flex flex-column min-vh-100">
+    <header class="app-header flex-shrink-0 border-bottom bg-white px-3 py-2 shadow-sm">
+      <h1 class="h5 mb-2 fw-bold text-dark">過信と判断 — ミニシミュレーション</h1>
+      <div class="d-flex align-items-start gap-2 min-w-0 lead-toolbar">
+        <p class="lead mb-0 small text-body-secondary flex-grow-1 min-w-0 lead-main-text">
+          客観・主観リスクのギャップ（Gap）を、グラフとパーティ登山のメタファで眺めながら判断します。
+        </p>
+        <button
+          type="button"
+          class="btn btn-secondary btn-sm rounded-circle lead-info-btn d-inline-flex align-items-center justify-content-center flex-shrink-0 text-white"
+          data-bs-toggle="modal"
+          data-bs-target="#demoInfoModal"
+          aria-label="このデモの説明を開く"
+        >
+          <svg class="lead-info-icon" width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
+            <circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.2" />
+            <circle cx="8" cy="5.35" r="0.85" fill="currentColor" />
+            <path fill="currentColor" d="M7.35 7.55h1.3v4.25h-1.3z" />
+          </svg>
+        </button>
+      </div>
     </header>
 
-    <main class="app-shell">
-      <section class="col col-left" aria-label="グラフと登山道">
-        <div class="toolbar">
-          <label>上限 <input type="range" id="max-steps" min="10" max="100" value="40" /> <span id="max-steps-val">40</span></label>
-          <div class="row-btn">
-            <button type="button" id="btn-reset">リセット</button>
-            <button type="button" id="btn-advance">次のステップ</button>
-            <button type="button" class="ghost" id="btn-autoplay">自動再生</button>
-          </div>
-          <span class="step-pill" id="step-label"></span>
-        </div>
-
-        <div class="viz-card chart-grow">
-          <h2>リスクの推移（0〜1）</h2>
-          <div id="chart-wrap">
-            <canvas id="chart" width="400" height="200"></canvas>
-          </div>
-          <div class="chart-legend">
-            <span><i class="swatch" style="background:#7c9cff;"></i>R_obj</span>
-            <span><i class="swatch" style="background:#fbbf24;"></i>R_subj</span>
-            <span><i class="swatch" style="background:#f87171;"></i>Gap</span>
-            <span><i class="swatch" style="background:#94a3b8;"></i>Cost_stop</span>
-          </div>
-        </div>
-
-        <div class="viz-card trail-box">
-          <h2>登山道ロールプレイ（進捗・危険度）</h2>
-          <div class="trail-scene">
-            <svg id="trail-svg" viewBox="0 0 400 110" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <defs>
-                <linearGradient id="trail-sky" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stop-color="#1e3a8a" stop-opacity="0.55" />
-                  <stop offset="55%" stop-color="#1e293b" stop-opacity="0.9" />
-                  <stop offset="100%" stop-color="#0c1222" />
-                </linearGradient>
-                <linearGradient id="trail-veil-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stop-color="#7f1d1d" stop-opacity="0.45" />
-                  <stop offset="100%" stop-color="#0c0a09" stop-opacity="0.82" />
-                </linearGradient>
-              </defs>
-              <rect x="0" y="0" width="400" height="110" fill="url(#trail-sky)" rx="6" />
-              <ellipse class="trail-cloud trail-cloud--a" cx="72" cy="26" rx="40" ry="11" fill="#94a3b8" opacity="0.4" />
-              <ellipse class="trail-cloud trail-cloud--b" cx="260" cy="22" rx="48" ry="14" fill="#64748b" opacity="0.35" />
-              <ellipse class="trail-cloud trail-cloud--c" cx="360" cy="30" rx="32" ry="10" fill="#475569" opacity="0.28" />
-              <rect id="trail-veil" x="0" y="0" width="400" height="110" fill="url(#trail-veil-grad)" opacity="0" style="pointer-events: none" />
-              <path
-                id="trail-path"
-                fill="none"
-                stroke="rgba(255,255,255,0.38)"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <g id="trail-hiker-root" transform="translate(22,44)">
-                <g id="trail-hiker-inner" class="trail-hiker-inner">
-                  <rect x="-12" y="-10" width="9" height="13" rx="2" fill="#44403c" opacity="0.92" />
-                  <circle cx="0" cy="-17" r="5.5" fill="#fde68a" stroke="#292524" stroke-width="1" />
-                  <path
-                    d="M0,-12 L0,7 M-10,-3 L10,-3 M-8,24 L0,7 L8,24"
-                    stroke="#e2e8f0"
-                    stroke-width="2.3"
-                    fill="none"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </g>
-              </g>
-              <text x="10" y="18" fill="rgba(255,255,255,0.5)" font-size="10">登山口</text>
-              <text x="318" y="18" fill="rgba(255,255,255,0.38)" font-size="10">上方エリア</text>
-            </svg>
-          </div>
-          <p class="trail-caption" id="trail-caption"></p>
-        </div>
-      </section>
-
-      <section class="col col-right" aria-label="数値と判断">
-        <div class="right-stack">
-          <div id="banner" class="banner" role="status"></div>
-
-          <div class="grid" id="metrics-root"></div>
-
-          <div class="card breakdown-card">
-            <h3>Risk 内訳（環境 / 人 / 時間）</h3>
-            <div class="subgrid" id="breakdown"></div>
-          </div>
-
-          <div class="decision-block">
-            <div class="row-btn" id="decision-row">
-              <button type="button" class="danger" id="btn-continue" disabled>続行（過信）</button>
-              <button type="button" class="safe" id="btn-llm" disabled>LLM 介入 → 中止</button>
+    <main class="container-fluid flex-grow-1 d-flex flex-column min-vh-0 px-2 py-2 app-main">
+      <div class="row g-2 g-lg-3 flex-grow-1 min-h-0">
+        <!-- 左: 主要指標・内訳 -->
+        <section class="col-12 col-lg-3 d-flex flex-column min-h-0 col-env" aria-label="主要指標とリスク内訳">
+          <div class="side-stack side-stack--left d-flex flex-column gap-2 flex-grow-1 min-h-0 overflow-auto">
+            <div class="metrics-block flex-shrink-0">
+              <h2 class="col-section-title small fw-bold text-body mb-2">主要指標</h2>
+              <div class="row row-cols-2 g-2" id="metrics-root"></div>
             </div>
-            <p class="decision-hint" id="decision-hint">上限ステップまで進むと分岐できます。</p>
+            <div class="card breakdown-card shadow-sm border flex-shrink-1 min-h-0 d-flex flex-column">
+              <h3 class="card-header py-2 px-3 small fw-bold mb-0">リスク内訳（環境テーマ別）</h3>
+              <div class="subgrid breakdown-detail card-body py-2 px-3 pt-0 flex-grow-1 min-h-0 overflow-auto" id="breakdown"></div>
+            </div>
           </div>
+        </section>
 
-          <div id="llm-wrap" class="llm-panel">
-            <h3>LLM メッセージ（任意）</h3>
-            <pre class="llm" id="llm-text"></pre>
+        <!-- 中央: グラフ・登山・操作 -->
+        <section class="col-12 col-lg-5 d-flex flex-column min-h-0 col-center" aria-label="リスク推移と登山の可視化">
+          <div class="center-stack d-flex flex-column gap-2 flex-grow-1 min-h-0 overflow-auto">
+            <div class="toolbar d-flex flex-wrap align-items-center gap-2 flex-shrink-0">
+              <label class="small text-muted mb-0 d-flex align-items-center gap-1">
+                上限
+                <input type="range" id="max-steps" min="10" max="100" value="40" class="form-range form-range-sm" style="width: 120px" />
+                <span id="max-steps-val" class="fw-semibold text-primary">40</span>
+              </label>
+              <div class="d-flex flex-wrap gap-1">
+                <button type="button" class="btn btn-sm btn-primary" id="btn-reset">リセット</button>
+                <button type="button" class="btn btn-sm btn-primary" id="btn-advance">次のステップ</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-autoplay">自動再生</button>
+              </div>
+              <span class="step-pill small text-muted ms-auto" id="step-label"></span>
+            </div>
+
+            <div class="viz-card chart-grow card border shadow-sm">
+              <div class="card-body py-2 px-3 d-flex flex-column flex-grow-1 min-h-0">
+                <h2 class="h6 card-title mb-2">リスクの推移（0〜1）</h2>
+                <div id="chart-wrap" class="flex-grow-1 min-h-0">
+                  <canvas id="chart" width="400" height="200"></canvas>
+                </div>
+                <div class="chart-legend mt-2" role="list" aria-label="グラフの凡例">
+                  <span class="chart-legend-item" role="listitem"><i class="swatch" style="background:#7c9cff;"></i>R_obj</span>
+                  <span class="chart-legend-item" role="listitem"><i class="swatch" style="background:#fbbf24;"></i>R_subj</span>
+                  <span class="chart-legend-item" role="listitem"><i class="swatch" style="background:#f87171;"></i>Gap</span>
+                  <span class="chart-legend-item" role="listitem"><i class="swatch" style="background:#94a3b8;"></i>Cost_stop</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="viz-card trail-box card border shadow-sm flex-shrink-0">
+              <div class="card-body py-2 px-3 d-flex flex-column min-h-0">
+                <h2 class="h6 card-title mb-2">パーティ登山（進捗・場所）</h2>
+                <div class="trail-scene" id="trail-scene-root">
+                  <div class="trail-bg" id="trail-bg" aria-hidden="true"></div>
+                  <div class="trail-veil" id="trail-veil" aria-hidden="true"></div>
+                  <div class="trail-party-overlay" aria-hidden="true">
+                    <div class="trail-char" id="trail-char-0">
+                      <div class="trail-char-anchor">
+                        <div class="trail-char-scale trail-char-scale--party-lg">
+                          <div class="dot-1"></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="trail-char" id="trail-char-1">
+                      <div class="trail-char-anchor">
+                        <div class="trail-char-scale trail-char-scale--party-lg">
+                          <div class="dot-2"></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="trail-char" id="trail-char-2">
+                      <div class="trail-char-anchor">
+                        <div class="trail-char-scale trail-char-scale--party-sm">
+                          <div class="dot-3"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <p class="trail-caption text-muted text-center mb-0 mt-1" id="trail-caption"></p>
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+
+        <!-- 右: 判断・引率設定・チャット -->
+        <section class="col-12 col-lg-4 d-flex flex-column min-h-0 col-chat" aria-label="判断と環境変数・チャット">
+          <div class="chat-stack chat-stack--scroll d-flex flex-column gap-2 flex-grow-1 min-h-0 overflow-auto">
+            <div class="card decision-card shadow-sm border flex-shrink-0">
+              <div class="card-body py-2 px-3">
+                <h3 class="h6 mb-2 fw-semibold text-body">最終判断</h3>
+                <div class="d-flex flex-wrap gap-2" id="decision-row">
+                  <button type="button" class="btn btn-sm btn-danger" id="btn-continue" disabled>続行（過信）</button>
+                  <button type="button" class="btn btn-sm btn-success" id="btn-llm" disabled>LLM 介入 → 中止</button>
+                </div>
+                <p class="decision-hint text-muted mb-0 mt-2 small" id="decision-hint">上限ステップまで進むと分岐できます。</p>
+              </div>
+            </div>
+            <div class="card guide-config-card guide-config-card--top shadow-sm border flex-shrink-0" id="guide-config-root"></div>
+            <div class="agent-chat-card card shadow-sm border d-flex flex-column flex-shrink-0">
+              <div class="card-header py-2 px-3 flex-shrink-0">
+                <h3 class="h6 mb-0 fw-semibold">エージェントチャット（Ollama）</h3>
+                <span class="agent-chat-hint small text-muted d-block mt-1">引率・中止コーチの発言</span>
+              </div>
+              <div
+                id="agent-chat-log"
+                class="agent-chat-scroll card-body py-2 px-3"
+                role="log"
+                aria-live="polite"
+              ></div>
+            </div>
+            <div id="llm-wrap" class="llm-panel card border shadow-sm flex-shrink-0">
+              <div class="card-header py-2 px-3 border-bottom">
+                <h3 class="h6 mb-0 fw-semibold">LLM メッセージ（中止時）</h3>
+              </div>
+              <div class="llm-panel-scroll">
+                <pre class="llm mb-0" id="llm-text"></pre>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
     </main>
   </div>
 
-  <script defer src="/static/js/demo.js"></script>
+  <div
+    class="modal fade demo-info-modal"
+    id="demoInfoModal"
+    tabindex="-1"
+    aria-labelledby="demoInfoModalLabel"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+      <div class="modal-content shadow">
+        <div class="modal-header">
+          <h2 class="modal-title fs-6 fw-semibold" id="demoInfoModalLabel">このデモについて</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
+        </div>
+        <div class="modal-body small text-body">
+          <p class="mb-3">
+            <strong>R_obj</strong>（客観リスク）と<strong>R_subj</strong>（主観リスク）のずれ・<strong>Gap</strong> を、左の主要指標・内訳と中央のグラフ・パーティ登山で確認できます。
+          </p>
+          <p class="mb-3">
+            ステップ進行で場所の背景が変わり、上限到達後は「続行」か「LLM 介入 → 中止」を選べます。右カラムでは引率エージェント設定とチャット、中止時のコーチメッセージを表示します。
+          </p>
+          <p class="mb-0">
+            地名とエンディングの対応は <code class="small">docs/design/rp_simulation.md</code> を参照してください。
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div
+    class="modal fade outcome-modal"
+    id="outcomeModal"
+    tabindex="-1"
+    aria-labelledby="outcomeModalTitle"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header py-2" id="outcome-modal-header">
+          <h2 class="modal-title h6 mb-0" id="outcomeModalTitle">シミュレーション結果</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
+        </div>
+        <div class="modal-body small text-body" id="outcome-modal-body"></div>
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-sm btn-primary" data-bs-dismiss="modal">閉じる</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+    crossorigin="anonymous"
+  ></script>
+  <script defer src="/static/js/demo.js?v=rp-v6"></script>
 </body>
 </html>

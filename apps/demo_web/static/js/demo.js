@@ -7,6 +7,17 @@
 
   const $ = (id) => document.getElementById(id);
 
+  const LLM_PLACEHOLDER =
+    "中止を選ぶと、ここにコーチからのメッセージが表示されます。";
+
+  function setLlmContent(text) {
+    const el = $("llm-text");
+    if (!el) return;
+    const raw = text != null ? String(text).trim() : "";
+    el.textContent = raw || LLM_PLACEHOLDER;
+    el.classList.toggle("llm--placeholder", !raw);
+  }
+
   const COLORS = {
     R_obj: "#7c9cff",
     R_subj: "#fbbf24",
@@ -16,6 +27,94 @@
 
   let autoplayTimer = null;
   let lastRenderedStep = null;
+  /** 結果モーダルを二重に出さないためのキー（outcome + step） */
+  let lastOutcomeModalKey = null;
+
+  function breakdownRow(labelHtml, val) {
+    return (
+      `<div class="bd-row">` +
+      `<span class="bd-k">${labelHtml}</span>` +
+      `<span class="bd-v">${fmt(val)}</span></div>`
+    );
+  }
+
+  function breakdownBoolRow(labelHtml, cond) {
+    return (
+      `<div class="bd-row">` +
+      `<span class="bd-k">${labelHtml}</span>` +
+      `<span class="bd-v">${cond ? "はい" : "いいえ"}</span></div>`
+    );
+  }
+
+  function renderBreakdown(m) {
+    const br = m.breakdown || {};
+    const env = m.env || {};
+    const hum = m.human || {};
+    const pr = m.pressure || {};
+    let h = `<div class="breakdown-rows">`;
+    h += `<div class="bd-section">合成（テーマ平均）</div>`;
+    h += breakdownRow("環境テーマ平均", br.environment_avg);
+    h += breakdownRow("人テーマ平均", br.human_avg);
+    h += breakdownRow("時間プレッシャー（内訳行）", br.time_pressure);
+    h += `<div class="bd-section">環境リスク（入力）</div>`;
+    h += breakdownRow(`天候 <span class="mono">weather</span>`, env.weather);
+    h += breakdownRow(`視界 <span class="mono">visibility</span>`, env.visibility);
+    h += breakdownRow(`気温リスク <span class="mono">temp_risk</span>`, env.temp_risk);
+    h += `<div class="bd-section">人（入力）</div>`;
+    h += breakdownRow(`疲労 <span class="mono">fatigue</span>`, hum.fatigue);
+    h += breakdownRow(`注意散漫 <span class="mono">attention_loss</span>`, hum.attention_loss);
+    h += `<div class="bd-section">圧力（入力）</div>`;
+    h += breakdownRow(`時間 <span class="mono">time_pressure</span>`, pr.time);
+    h += breakdownRow(`外部 <span class="mono">external_pressure</span>`, pr.external);
+    h += `<div class="bd-section">フラグ</div>`;
+    h += breakdownBoolRow(
+      `続行ルール成立 <span class="mono">(R_subj−Cost_stop)&lt;T</span>`,
+      !!m.continue_rule_holds
+    );
+    h += breakdownBoolRow("Gap ≥ 0.2（要注意）", !!m.gap_danger);
+    h += `</div>`;
+    return h;
+  }
+
+  function openOutcomeModal(data) {
+    const o = data.outcome;
+    const titleEl = $("outcomeModalTitle");
+    const bodyEl = $("outcome-modal-body");
+    const headEl = $("outcome-modal-header");
+    const modalEl = $("outcomeModal");
+    if (!titleEl || !bodyEl || !headEl || !modalEl || !window.bootstrap) return;
+
+    headEl.className =
+      "modal-header py-2 outcome-modal-header bg-white border-bottom";
+    headEl.classList.remove(
+      "outcome-modal-header--danger",
+      "outcome-modal-header--success",
+      "outcome-modal-header--info"
+    );
+
+    let title = "シミュレーション結果";
+    let body = "";
+    if (o === "accident") {
+      title = "続行の結果";
+      body =
+        "そのまま踏み切り → 森の夜（引き返せないルート）。客観リスクが高い状態での続行とみなします。";
+      headEl.classList.add("outcome-modal-header--danger");
+    } else if (o === "avoided") {
+      title = "中止の結果";
+      body = "LLM 介入により中止 → 帰還（ホーム）。";
+      headEl.classList.add("outcome-modal-header--success");
+    } else if (o === "cleared") {
+      title = "ゴール";
+      body = "条件良好のままゴール（海）へ到達した想定です。";
+      headEl.classList.add("outcome-modal-header--info");
+    } else {
+      return;
+    }
+
+    titleEl.textContent = title;
+    bodyEl.textContent = body;
+    window.bootstrap.Modal.getOrCreateInstance(modalEl).show();
+  }
 
   async function api(path, opt) {
     const res = await fetch(path, opt);
@@ -55,7 +154,7 @@
       ctx.lineTo(W - pad.r, y);
       ctx.stroke();
       ctx.fillStyle = "rgba(255,255,255,0.35)";
-      ctx.font = "10px system-ui";
+      ctx.font = "11px system-ui";
       ctx.textAlign = "right";
       const val = (1 - i / 4).toFixed(1);
       ctx.fillText(val, pad.l - 4, y + 3);
@@ -90,7 +189,7 @@
     drawLine("Cost_stop", COLORS.Cost_stop, true);
 
     ctx.fillStyle = "rgba(255,255,255,0.45)";
-    ctx.font = "10px system-ui";
+    ctx.font = "11px system-ui";
     ctx.textAlign = "center";
     ctx.fillText("ステップ", W / 2, H - 8);
 
@@ -105,33 +204,6 @@
     }
   }
 
-  function buildTrailPath() {
-    const pts = [];
-    const segments = 28;
-    for (let i = 0; i <= segments; i++) {
-      const t = i / segments;
-      const x = 22 + t * (400 - 44);
-      const y = 62 + Math.sin(t * Math.PI * 1.55) * 16 - t * 8;
-      pts.push([x, y]);
-    }
-    let d = `M ${pts[0][0]} ${pts[0][1]}`;
-    for (let i = 1; i < pts.length; i++) d += ` L ${pts[i][0]} ${pts[i][1]}`;
-    $("trail-path").setAttribute("d", d);
-    return pts;
-  }
-
-  const trailPts = buildTrailPath();
-
-  function trailPosition(progress01) {
-    const t = Math.min(1, Math.max(0, progress01));
-    const idx = t * (trailPts.length - 1);
-    const i = Math.floor(idx);
-    const f = idx - i;
-    const p0 = trailPts[i];
-    const p1 = trailPts[Math.min(i + 1, trailPts.length - 1)];
-    return [p0[0] + f * (p1[0] - p0[0]), p0[1] + f * (p1[1] - p0[1])];
-  }
-
   function pulseTrailScene() {
     const el = document.querySelector(".trail-scene");
     if (!el) return;
@@ -140,30 +212,86 @@
     el.classList.add("trail-scene--pulse");
   }
 
+  const RP_BG = {
+    yama: "/static/image/yama.jpg",
+    mori: "/static/image/mori.jpg",
+    kouya: "/static/image/kouya.jpg",
+    home: "/static/image/home.jpg",
+    mori_yoru: "/static/image/mori_yoru.jpg",
+    umi: "/static/image/umi.jpg",
+  };
+
+  const RP_LABEL = {
+    yama: "山・登山口付近",
+    mori: "森の中",
+    kouya: "高地・荒野（コウヤ）",
+    home: "帰還（ホーム）",
+    mori_yoru: "森の夜（引き返せない）",
+    umi: "ゴール（海）",
+  };
+
+  function inferRpZone(data) {
+    const phase = data.phase;
+    const oc = data.outcome;
+    const ms = Math.max(data.max_steps || 1, 1);
+    const step = data.step || 0;
+    if (phase === "ended") {
+      if (oc === "avoided") return "home";
+      if (oc === "accident") return "mori_yoru";
+      if (oc === "cleared") return "umi";
+    }
+    const pr = step / ms;
+    if (pr < 0.28) return "yama";
+    if (pr < 0.55) return "mori";
+    return "kouya";
+  }
+
+  const TRI_PARTY = [
+    { dx: 0, dy: -5.4 },
+    { dx: 6.0, dy: 3.7 },
+    { dx: -6.0, dy: 3.7 },
+  ];
+  const CIRCLE_TURNS = 2.2;
+  const CIRCLE_R_PCT = 2.85;
+  /** キャラ全体をやや下へ（%） */
+  const PARTY_DROP_Y = 3.2;
+
   function updateTrail(data) {
     const m = data.metrics || {};
     const r = typeof m.R_obj === "number" ? m.R_obj : 0;
     const progress = data.max_steps > 0 ? data.step / data.max_steps : 0;
-    const [cx, cy] = trailPosition(progress);
-    const footOy = 18;
-    const hiker = $("trail-hiker-root");
-    if (hiker) {
-      hiker.setAttribute("transform", `translate(${cx}, ${cy - footOy})`);
-    }
-
-    const inner = $("trail-hiker-inner");
     const walking =
       data.phase === "running" &&
       data.step < data.max_steps &&
       data.step >= 0;
-    if (inner) {
-      inner.classList.toggle("trail-hiker-inner--walk", !!walking);
+
+    const zone = data.rp_zone || inferRpZone(data);
+    const bg = $("trail-bg");
+    if (bg && RP_BG[zone]) {
+      bg.style.backgroundImage = 'url("' + RP_BG[zone] + '")';
+    }
+
+    const ang = progress * Math.PI * 2 * CIRCLE_TURNS;
+    const baseX = 50 + Math.cos(ang) * CIRCLE_R_PCT;
+    const baseY = 50 + Math.sin(ang) * CIRCLE_R_PCT + PARTY_DROP_Y;
+
+    for (let i = 0; i < TRI_PARTY.length; i++) {
+      const t = TRI_PARTY[i];
+      const charRoot = $("trail-char-" + i);
+      if (charRoot) {
+        charRoot.style.left = baseX + t.dx + "%";
+        charRoot.style.top = baseY + t.dy + "%";
+      }
+      const anchor = charRoot && charRoot.querySelector(".trail-char-anchor");
+      if (anchor) {
+        anchor.classList.toggle("trail-char-anchor--walk", !!walking);
+      }
     }
 
     const veil = $("trail-veil");
     if (veil) {
       const op = Math.min(0.78, r * 0.92 + (m.gap_danger ? 0.08 : 0));
-      veil.setAttribute("opacity", String(op));
+      veil.style.opacity = String(op);
     }
 
     const scene = document.querySelector(".trail-scene");
@@ -171,8 +299,12 @@
       scene.classList.toggle("trail-scene--danger", !!(m.gap_danger || r >= 0.42));
     }
 
+    const z = data.rp_zone || inferRpZone(data);
+    const zj = RP_LABEL[z] || z;
     $("trail-caption").textContent =
-      `ステップ ${data.step} / ${data.max_steps} · ロール：登山途中 · 客観 R_obj ≈ ${m.R_obj != null ? m.R_obj.toFixed(2) : "—"}`;
+      `ステップ ${data.step} / ${data.max_steps} · 場所：${zj} · R_obj ≈ ${
+        m.R_obj != null ? m.R_obj.toFixed(2) : "—"
+      }`;
   }
 
   function render(data) {
@@ -181,19 +313,74 @@
       prevStep !== null && data.step > prevStep && data.step > 0;
 
     const m = data.metrics || {};
-    const br = m.breakdown || {};
     $("step-label").textContent = `${data.step} / ${data.max_steps} · ${data.phase}`;
-    $("metrics-root").innerHTML = `
-        <div class="card"><h3>R_obj</h3><div class="val">${fmt(m.R_obj)}</div></div>
-        <div class="card"><h3>R_subj</h3><div class="val">${fmt(m.R_subj)}</div></div>
-        <div class="card"><h3>Gap</h3><div class="val">${fmt(m.Gap)}</div></div>
-        <div class="card"><h3>T</h3><div class="val">${fmt(m.T)}</div></div>
-        <div class="card"><h3>Cost_stop</h3><div class="val">${fmt(m.Cost_stop)}</div></div>
-        <div class="card"><h3>バイアス</h3><div class="val">${fmt(m.bias)}</div></div>
-      `;
-    $("breakdown").innerHTML =
-      `環境 ${fmt(br.environment_avg)} · 人 ${fmt(br.human_avg)} · 時間 ${fmt(br.time_pressure)}<br/>` +
-      `Gap≥0.2: ${m.gap_danger ? "はい" : "いいえ"}`;
+    function metricCol(jaLabel, codeKey, val) {
+      return (
+        `<div class="col">` +
+        `<div class="card metric-card h-100 border shadow-sm">` +
+        `<div class="card-body py-2 px-2">` +
+        `<h3 class="h6 metric-heading mb-1">` +
+        `<span class="metric-ja">${jaLabel}</span>` +
+        `<span class="metric-code">${codeKey}</span>` +
+        `</h3>` +
+        `<div class="val metric-val">${fmt(val)}</div>` +
+        `</div></div></div>`
+      );
+    }
+    $("metrics-root").innerHTML =
+      metricCol("客観リスク", "R_obj", m.R_obj) +
+      metricCol("主観リスク", "R_subj", m.R_subj) +
+      metricCol("ギャップ", "Gap", m.Gap) +
+      metricCol("閾値", "T", m.T) +
+      metricCol("中止コスト", "Cost_stop", m.Cost_stop) +
+      metricCol("過信バイアス", "bias", m.bias);
+
+    const gc = data.guide_config;
+    const gRoot = $("guide-config-root");
+    if (gRoot && gc) {
+      const on = gc.agent_enabled ? "ON" : "OFF";
+      const pers = String(gc.personality || "")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+      gRoot.innerHTML =
+        `<div class="card-body py-2 px-3">` +
+        `<h3 class="h6 mb-2 fw-semibold">引率エージェント（DEMO_GUIDE）</h3>` +
+        `<p class="small mb-1"><span class="badge ${gc.agent_enabled ? "text-bg-primary" : "text-bg-secondary"}">${on}</span></p>` +
+        `<p class="small text-muted mb-0 demo-guide-personality">${pers}</p></div>`;
+    }
+
+    const chatLog = $("agent-chat-log");
+    const gchat = data.guide_chat;
+    if (chatLog && Array.isArray(gchat)) {
+      chatLog.innerHTML = gchat
+        .slice(-40)
+        .map(function (e) {
+          const kind = e.kind || "";
+          const body = String(e.content || "")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+          const meta =
+            "step " +
+            (e.step != null ? e.step : "—") +
+            (kind ? " · " + kind : "") +
+            (e.action ? " · " + e.action : "");
+          const cls =
+            kind === "guide"
+              ? "chat-bubble chat-bubble--guide"
+              : kind === "coach"
+                ? "chat-bubble chat-bubble--coach"
+                : "chat-bubble";
+          return (
+            `<div class="${cls} mb-2">` +
+            `<div class="chat-meta">${meta}</div>` +
+            `<div class="chat-body">${body}</div></div>`
+          );
+        })
+        .join("");
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    $("breakdown").innerHTML = renderBreakdown(m);
 
     const canDecide = !!data.can_decide && data.phase === "running";
     $("btn-advance").disabled =
@@ -201,17 +388,16 @@
     $("btn-continue").disabled = !canDecide;
     $("btn-llm").disabled = !canDecide;
 
-    const ban = $("banner");
-    ban.className = "banner";
-    if (data.outcome === "accident") {
-      ban.classList.add("show", "accident");
-      ban.textContent = "結果：続行 → 事故シナリオ（デモ）。";
-    } else if (data.outcome === "avoided") {
-      ban.classList.add("show", "avoided");
-      ban.textContent = "結果：中止 → 回避。";
-    } else {
-      ban.classList.remove("show");
-      ban.textContent = "";
+    const endKey =
+      data.phase === "ended" && data.outcome
+        ? String(data.outcome) + "-" + String(data.step)
+        : "";
+    if (endKey && endKey !== lastOutcomeModalKey) {
+      lastOutcomeModalKey = endKey;
+      openOutcomeModal(data);
+    }
+    if (data.phase === "running" && !data.outcome) {
+      lastOutcomeModalKey = null;
     }
 
     $("decision-row").style.display =
@@ -269,10 +455,8 @@
     $("max-steps").value = data.max_steps;
     $("max-steps-val").textContent = data.max_steps;
     lastRenderedStep = null;
+    setLlmContent("");
     render(data);
-    const lw = $("llm-wrap");
-    lw.classList.remove("show");
-    $("llm-text").textContent = "";
   }
 
   function bind() {
@@ -289,8 +473,8 @@
         body: JSON.stringify({ max_steps: ms }),
       });
       lastRenderedStep = null;
+      setLlmContent("");
       render(data);
-      $("llm-wrap").classList.remove("show");
     });
 
     $("btn-advance").addEventListener("click", async () => {
@@ -318,13 +502,12 @@
         body: JSON.stringify({ choice: "llm_stop" }),
       });
       render(data);
-      const lw = $("llm-wrap");
-      lw.classList.add("show");
       if (data.llm_message) {
-        $("llm-text").textContent = data.llm_message;
+        setLlmContent(data.llm_message);
       } else {
-        $("llm-text").textContent =
-          "Ollama からの応答がありませんでした。数値と分岐はそのまま有効です。";
+        setLlmContent(
+          "Ollama からの応答がありませんでした。数値と分岐はそのまま有効です。"
+        );
       }
     });
 

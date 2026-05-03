@@ -3,83 +3,255 @@
  * 将来フロントを別パッケージに切り出すときの土台（API は /api/* を想定）
  */
 :root {
-  --bg: #0f1220;
-  --card: #171a2e;
-  --text: #e8e9ef;
-  --muted: #989aaf;
-  --accent: #7c9cff;
-  --danger: #f87171;
-  --ok: #4ade80;
+  --bg: #e8eaef;
+  --card: #ffffff;
+  --text: #18181b;
+  --muted: #52525b;
+  --border: rgba(24, 24, 27, 0.12);
+  --accent: #4f46e5;
+  --danger: #dc2626;
+  --ok: #15803d;
 }
 
 * {
   box-sizing: border-box;
 }
 
-html,
-body {
+html {
   margin: 0;
-  height: 100%;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-body {
-  font-family: system-ui, sans-serif;
-  background: var(--bg);
+body.demo-body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+body.demo-body {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.45;
   color: var(--text);
-  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* 画面全体：ヘッダー + 2 カラム */
+/* Bootstrap 踏襲しつつ全体の文字バランスをそろえる */
+body.demo-body .app-header .h5 {
+  font-size: 1.0625rem;
+  letter-spacing: -0.01em;
+}
+
+body.demo-body .app-header .lead.small {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+body.demo-body .btn-sm {
+  font-size: 0.8125rem;
+}
+
+body.demo-body .small,
+body.demo-body small {
+  font-size: 0.8125rem;
+}
+
+body.demo-body .card-title,
+body.demo-body .viz-card .card-title.h6 {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* 主要指標：日本語ラベル + 変数名 */
+.metric-heading {
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+}
+
+.metric-heading .metric-ja {
+  display: block;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.metric-heading .metric-code {
+  display: block;
+  margin-top: 0.08rem;
+  font-size: 0.62rem;
+}
+
+.metric-val {
+  font-size: 0.9375rem !important;
+  font-weight: 700;
+}
+
+.demo-guide-personality {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.chat-meta {
+  font-size: 0.8125rem;
+}
+
+.decision-card .decision-hint {
+  font-size: 0.8125rem;
+}
+
+/* 右カラム：チャット／LLM は外枠の高さ固定・本文のみスクロール */
+.agent-chat-scroll {
+  height: 12.5rem;
+  flex: 0 0 12.5rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  background: #f8fafc;
+}
+
+/* LLM：高さ固定・本文だけ縦スクロール */
+.llm-panel-scroll {
+  height: 10rem;
+  min-height: 10rem;
+  max-height: 10rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0.65rem 0.75rem;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  background: #fafbfc;
+  border-radius: 0 0 0.375rem 0.375rem;
+}
+
+.llm-panel .llm {
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+  color: var(--text);
+}
+
+.llm-panel .llm.llm--placeholder {
+  color: var(--muted);
+}
+
+/* 画面全体：ヘッダー + 3 カラム（はみ出し時はページ全体を縦スクロール） */
 .app-layout {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  max-height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .app-header {
   flex-shrink: 0;
-  padding: 0.45rem 0.85rem 0.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: linear-gradient(
-    180deg,
-    rgba(30, 32, 55, 0.92) 0%,
-    rgba(15, 18, 32, 0.98) 100%
-  );
+  position: relative;
+  z-index: 20;
 }
 
-.app-header h1 {
-  font-size: 1.05rem;
-  margin: 0 0 0.2rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+.lead-toolbar {
+  min-width: 0;
 }
 
-.app-header .lead {
-  color: var(--muted);
-  margin: 0;
-  font-size: 0.74rem;
-  line-height: 1.45;
-  max-width: 72ch;
+.lead-main-text {
+  min-width: 0;
 }
 
-.app-header .project-slug {
+/* i ボタン：常に白アイコン（ホバー不要で視認） */
+.lead-info-btn {
+  width: 1.38rem !important;
+  height: 1.38rem !important;
+  min-width: 1.38rem;
+  min-height: 1.38rem;
+  padding: 0 !important;
+  flex-shrink: 0;
+  line-height: 0 !important;
+  color: #fff !important;
+  --bs-btn-color: #fff;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-active-color: #fff;
+  --bs-btn-bg: #6c757d;
+  --bs-btn-hover-bg: #5c636a;
+  --bs-btn-border-color: #6c757d;
+  --bs-btn-hover-border-color: #5c636a;
+}
+
+.lead-info-btn:focus-visible {
+  color: #fff !important;
+}
+
+.lead-info-icon {
   display: block;
-  font-size: 0.65rem;
-  color: rgba(152, 154, 175, 0.85);
-  margin-top: 0.25rem;
-  font-family: ui-monospace, monospace;
+  color: #fff;
 }
 
+/* 外円＝stroke のみ、ドット＆字＝塗り */
+.lead-info-btn svg circle:first-of-type {
+  fill: none !important;
+  stroke: #fff !important;
+}
+
+.lead-info-btn svg circle:not(:first-of-type),
+.lead-info-btn svg path {
+  fill: #fff !important;
+  stroke: none;
+}
+
+/* Bootstrap モーダル（デモ説明）の見た目をアプリに合わせる */
+.demo-info-modal .modal-content {
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.demo-info-modal .modal-header {
+  border-bottom-color: var(--border);
+  padding: 0.55rem 0.85rem;
+  background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+}
+
+.demo-info-modal .modal-body {
+  padding: 0.85rem 1rem;
+  line-height: 1.55;
+}
+
+.demo-info-modal .modal-body p:last-child {
+  margin-bottom: 0 !important;
+}
+
+@media (max-width: 575.98px) {
+  .demo-info-modal .modal-dialog {
+    margin-left: auto;
+    margin-right: auto;
+    max-width: calc(100% - 1rem);
+  }
+}
+
+/* メインは Bootstrap container-fluid + row（index.html） */
+.app-main {
+  min-height: 0;
+}
+
+/* シンプル2カラム（index.html の .app-shell） */
 .app-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 0.75rem 1rem;
   flex: 1;
   min-height: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 0.65rem;
-  padding: 0.45rem 0.75rem 0.55rem;
+  padding: 0.5rem 0.75rem 0.75rem;
+  overflow: auto;
 }
 
 .col {
@@ -89,106 +261,51 @@ body {
   min-width: 0;
 }
 
-.toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.35rem 0.65rem;
-  margin-top: 0.15rem;
-  flex-shrink: 0;
-}
-
-.toolbar label {
-  font-size: 0.72rem;
-  color: var(--muted);
-}
-
-input[type="range"] {
-  width: 120px;
-  vertical-align: middle;
-}
+/* ツールバー・操作ボタンは Bootstrap .btn（グローバル button ルールは使わない） */
 
 #max-steps-val {
   font-variant-numeric: tabular-nums;
-  color: var(--accent);
-  font-weight: 600;
-  font-size: 0.8rem;
-}
-
-.row-btn {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  align-items: center;
-}
-
-button {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: #fff;
-  border: none;
-  padding: 0.38rem 0.75rem;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.8rem;
-  cursor: pointer;
-}
-
-button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-button.danger {
-  background: linear-gradient(135deg, #dc2626, #ea580c);
-}
-
-button.safe {
-  background: linear-gradient(135deg, #059669, #16a34a);
-}
-
-button.ghost {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-button.ghost.active {
-  background: rgba(99, 102, 241, 0.35);
-  border-color: rgba(129, 140, 248, 0.5);
 }
 
 .step-pill {
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   color: var(--muted);
 }
 
+/* .viz-card は Bootstrap .card と併用 */
 .viz-card {
-  background: var(--card);
-  border-radius: 10px;
-  padding: 0.5rem 0.6rem;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  min-height: 0;
   display: flex;
   flex-direction: column;
+}
+
+.viz-card .card-body {
   min-height: 0;
 }
 
-.viz-card h2 {
-  margin: 0 0 0.35rem;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text);
+.viz-card h2,
+.viz-card .card-title {
   flex-shrink: 0;
 }
 
 .viz-card.chart-grow {
-  flex: 1;
-  margin-top: 0.35rem;
+  flex: 1 1 auto;
+  margin-top: 0;
+  max-height: min(36vh, 320px);
+  min-height: 0;
+}
+
+.col-center .viz-card.chart-grow {
+  margin-top: 0;
 }
 
 #chart-wrap {
   position: relative;
-  flex: 1;
-  min-height: 80px;
+  flex: 0 1 auto;
   width: 100%;
+  min-height: 64px;
+  max-height: 22vh;
+  height: 22vh;
 }
 
 #chart {
@@ -198,20 +315,27 @@ button.ghost.active {
 }
 
 .chart-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem 0.65rem;
-  justify-content: center;
-  font-size: 0.65rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(6.25rem, 1fr));
+  column-gap: 0.75rem;
+  row-gap: 0.4rem;
+  align-items: center;
+  justify-items: start;
+  width: 100%;
+  max-width: 100%;
+  font-size: clamp(0.65rem, 0.8vw + 0.5rem, 0.75rem);
   color: var(--muted);
   margin-top: 0.35rem;
   flex-shrink: 0;
 }
 
-.chart-legend span {
+.chart-legend-item {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.35rem;
+  min-width: 0;
+  max-width: 100%;
+  white-space: nowrap;
 }
 
 .swatch {
@@ -221,11 +345,73 @@ button.ghost.active {
   display: inline-block;
 }
 
+/* 中央: Ollama 引率と可視化の接続 */
+.viz-llm-sync {
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.viz-sync {
+  margin: 0;
+  padding: 0.4rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #f8fafc;
+}
+
+.viz-sync-badge {
+  display: block;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  margin-bottom: 0.2rem;
+}
+
+.viz-sync-line {
+  margin: 0;
+  font-size: 0.68rem;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+.viz-sync-line code {
+  font-size: 0.62rem;
+  padding: 0.05rem 0.2rem;
+  border-radius: 4px;
+  background: rgba(24, 24, 27, 0.06);
+}
+
+.viz-sync--on {
+  border-color: rgba(79, 70, 229, 0.35);
+  background: rgba(79, 70, 229, 0.06);
+}
+
+.viz-sync--wait {
+  border-color: rgba(79, 70, 229, 0.25);
+  background: rgba(79, 70, 229, 0.04);
+}
+
+.viz-sync--off {
+  background: #fafafa;
+}
+
+.state-guide-agent .viz-sync--on .viz-sync-badge {
+  color: #4338ca;
+}
+
 /* —— 登山道シーン（ロールプレイ風） —— */
 .trail-box {
-  flex-shrink: 0;
-  margin-top: 0.35rem;
-  max-height: 32%;
+  flex: 0 1 auto;
+  margin-top: 0;
+  min-height: 0;
+  max-height: none;
+}
+
+.trail-scene--agent-on {
+  box-shadow:
+    inset 0 0 24px rgba(24, 24, 27, 0.06),
+    0 0 0 2px rgba(79, 70, 229, 0.22);
 }
 
 .trail-box h2 {
@@ -236,8 +422,41 @@ button.ghost.active {
   position: relative;
   border-radius: 10px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border);
+  box-shadow: inset 0 0 24px rgba(24, 24, 27, 0.06);
+  /* 背景画像の解像度・縦横比に依存させず、表示枠の高さを一定に近づける */
+  width: 100%;
+  aspect-ratio: 400 / 110;
+  max-height: min(240px, 34vh);
+  min-height: 0;
+  height: auto;
+  flex-shrink: 0;
+}
+
+.trail-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-color: #1e293b;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  transition: opacity 0.5s ease;
+}
+
+/* 危険度のヴェール（旧 SVG の矩形と同等） */
+.trail-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  background: linear-gradient(
+    135deg,
+    rgba(127, 29, 29, 0.45) 0%,
+    rgba(12, 10, 9, 0.82) 100%
+  );
 }
 
 .trail-scene--pulse {
@@ -255,87 +474,70 @@ button.ghost.active {
   }
 }
 
-#trail-svg {
-  width: 100%;
-  height: auto;
-  max-height: 96px;
-  display: block;
-  vertical-align: middle;
+/* ピクセルキャラ（character*.css の .dot-1〜3） */
+.trail-party-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
 }
 
-.trail-cloud {
-  opacity: 0.35;
-  animation: trail-cloud-drift 18s linear infinite;
+.trail-char {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
 }
 
-.trail-cloud--b {
-  animation-duration: 24s;
-  animation-direction: reverse;
+.trail-char-anchor {
+  transform: translate(-50%, -86%);
 }
 
-.trail-cloud--c {
-  animation-duration: 21s;
-  opacity: 0.22;
+.trail-char-scale {
+  transform: scale(0.2);
+  transform-origin: 50% 100%;
 }
 
-@keyframes trail-cloud-drift {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-24px);
-  }
+/* キャラ1・2 だけベース比 1.7 倍（0.2 × 1.7 ≈ 0.34） */
+.trail-char-scale--party-lg {
+  transform: scale(0.34);
+  transform-origin: 50% 100%;
 }
 
-#trail-path {
-  transition: stroke 0.35s ease, stroke-width 0.25s ease;
+.trail-char-scale--party-sm {
+  transform: scale(0.2);
+  transform-origin: 50% 100%;
 }
 
-.trail-scene--danger #trail-path {
-  stroke: rgba(248, 113, 113, 0.55);
+.trail-char-scale .dot-1,
+.trail-char-scale .dot-2,
+.trail-char-scale .dot-3 {
+  margin: 0;
 }
 
-.trail-hiker-inner {
-  transform-origin: 0 8px;
+.trail-scene--danger {
+  box-shadow: inset 0 0 0 2px rgba(248, 113, 113, 0.4);
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .trail-hiker-inner--walk {
-    animation: trail-hiker-bob 0.52s ease-in-out infinite;
-  }
-
-  .trail-scene--pulse #trail-path {
-    animation: trail-path-pulse 0.5s ease-out;
+  .trail-char-anchor--walk {
+    animation: trail-party-bob 0.52s ease-in-out infinite;
   }
 }
 
-@keyframes trail-hiker-bob {
+@keyframes trail-party-bob {
   0%,
   100% {
-    transform: translateY(0);
+    transform: translate(-50%, -86%) translateY(0);
   }
   50% {
-    transform: translateY(-4px);
-  }
-}
-
-@keyframes trail-path-pulse {
-  0% {
-    stroke-width: 3.5;
-    stroke: rgba(129, 140, 248, 0.65);
-  }
-  100% {
-    stroke-width: 2;
-    stroke: rgba(255, 255, 255, 0.35);
+    transform: translate(-50%, -86%) translateY(-3px);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .trail-cloud {
-    animation: none;
-  }
-
-  .trail-hiker-inner--walk {
+  .trail-char-anchor--walk {
     animation: none;
   }
 
@@ -345,43 +547,83 @@ button.ghost.active {
 }
 
 .trail-caption {
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   color: var(--muted);
   text-align: center;
   margin: 0.2rem 0 0;
-  line-height: 1.35;
+  line-height: 1.4;
 }
 
+/* バナー：Bootstrap .alert / .d-none と併用（display は付与クラスに任せる） */
 .banner {
-  padding: 0.4rem 0.55rem;
-  border-radius: 8px;
-  margin-bottom: 0.35rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  display: none;
-  font-size: 0.75rem;
-  flex-shrink: 0;
-}
-
-.banner.show {
-  display: block;
+  font-size: 0.8125rem;
+  line-height: 1.45;
 }
 
 .banner.accident {
-  background: rgba(248, 113, 113, 0.12);
-  border-color: rgba(248, 113, 113, 0.35);
+  background: rgba(220, 38, 38, 0.12);
+  border: 1px solid rgba(220, 38, 38, 0.35);
+  color: #7f1d1d;
 }
 
 .banner.avoided {
-  background: rgba(74, 222, 128, 0.12);
-  border-color: rgba(74, 222, 128, 0.35);
+  background: rgba(21, 128, 61, 0.1);
+  border: 1px solid rgba(21, 128, 61, 0.35);
+  color: #14532d;
 }
 
-.right-stack {
+.banner.cleared {
+  background: rgba(14, 165, 233, 0.12);
+  border: 1px solid rgba(14, 165, 233, 0.4);
+  color: #0c4a6e;
+}
+
+/* バナーは Bootstrap .alert と併用（表示切替は d-none） */
+.banner.d-none {
+  display: none !important;
+}
+
+.side-stack--left {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
   flex: 1;
   min-height: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-right: 0.1rem;
+}
+
+.center-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.chat-stack {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  gap: 0.35rem;
+}
+
+/* 右カラム：外側はスクロールさせず、チャット／LLM 内部のみ縦スクロール */
+.chat-stack--scroll {
+  overflow: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-right: 0.1rem;
+}
+
+.guide-config-card--top {
+  flex-shrink: 0;
 }
 
 .grid {
@@ -391,20 +633,81 @@ button.ghost.active {
   flex-shrink: 0;
 }
 
-.card {
+.grid--env {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.metrics-block {
+  flex-shrink: 0;
+}
+
+.col-section-title {
+  margin: 0 0 0.3rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+
+/* Bootstrap .card と併用（パディングは .card-body 側） */
+.demo-body .card {
   background: var(--card);
-  border-radius: 8px;
-  padding: 0.35rem 0.45rem;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-color: var(--border) !important;
+}
+
+.metric-card {
+  min-height: 3.85rem;
+}
+
+.metric-label {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  margin-bottom: 0.25rem;
+}
+
+.metric-ja {
+  display: block;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+}
+
+.metric-code {
+  display: block;
+  font-size: 0.6rem;
+  font-family: ui-monospace, monospace;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.02em;
 }
 
 .card h3 {
-  margin: 0 0 0.15rem;
-  font-size: 0.58rem;
-  color: var(--muted);
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+  color: var(--text);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.card h3 .code {
+  display: inline-block;
+  margin-left: 0.25rem;
+  font-size: 0.62rem;
+  font-family: ui-monospace, monospace;
   font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
+  color: var(--muted);
+  letter-spacing: 0;
+}
+
+.demo-body .metric-card h3.metric-heading {
+  margin: 0 0 0.28rem;
+  font-size: unset;
+  font-weight: 600;
 }
 
 .card .val {
@@ -413,10 +716,206 @@ button.ghost.active {
   font-variant-numeric: tabular-nums;
 }
 
-.breakdown-card .subgrid {
-  font-size: 0.68rem;
+/* リスク内訳：枠内でスクロール（幅・高さのはみ出しを内側に閉じる） */
+.breakdown-card {
+  flex: 0 1 auto;
+  min-height: 0;
+  min-width: 0;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.breakdown-card .card-header h3 {
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.breakdown-card .subgrid,
+.breakdown-card .breakdown-detail {
+  font-size: 0.8125rem;
   color: var(--muted);
   line-height: 1.4;
+  flex: 0 1 auto;
+  min-height: 0;
+  min-width: 0;
+  max-height: min(340px, 42vh);
+  overflow-x: auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.breakdown-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.bd-section {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-top: 0.35rem;
+  letter-spacing: 0.03em;
+  opacity: 0.88;
+}
+
+.bd-section:first-child {
+  margin-top: 0;
+}
+
+.bd-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.12rem 0;
+  border-bottom: 1px solid rgba(24, 24, 27, 0.06);
+}
+
+.bd-row--alert {
+  border-bottom: none;
+  margin-top: 0.15rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid rgba(24, 24, 27, 0.08);
+}
+
+.bd-k {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.bd-k .mono {
+  font-family: ui-monospace, monospace;
+  font-size: 0.58rem;
+  color: var(--muted);
+}
+
+.bd-v {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--text);
+  flex-shrink: 0;
+}
+
+.guide-config-card {
+  flex-shrink: 0;
+}
+
+.guide-config-card h3 {
+  margin: 0 0 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.guide-badge-wrap {
+  margin: 0 0 0.35rem;
+  font-size: 0.68rem;
+}
+
+.pill {
+  display: inline-block;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.pill--on {
+  background: rgba(22, 163, 74, 0.12);
+  border: 1px solid rgba(22, 163, 74, 0.35);
+  color: #166534;
+}
+
+.pill--off {
+  background: #f4f4f5;
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+
+.guide-env-label {
+  display: inline-block;
+  font-size: 0.58rem;
+  font-family: ui-monospace, monospace;
+  color: var(--muted);
+  margin-bottom: 0.15rem;
+}
+
+.guide-personality-body {
+  margin: 0;
+  font-size: 0.68rem;
+  color: var(--text);
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.guide-env-footnote {
+  margin: 0.45rem 0 0;
+  font-size: 0.6rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.guide-env-footnote code {
+  font-size: 0.58rem;
+}
+
+.agent-chat-card {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  min-height: 0;
+}
+
+.agent-chat-empty {
+  margin: 0;
+  font-size: 0.68rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.chat-bubble {
+  margin-bottom: 0.45rem;
+  padding: 0.38rem 0.45rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  box-shadow: 0 1px 2px rgba(24, 24, 27, 0.04);
+}
+
+.chat-bubble:last-child {
+  margin-bottom: 0;
+}
+
+.chat-bubble--guide {
+  border-left: 3px solid rgba(124, 156, 255, 0.65);
+}
+
+.chat-bubble--coach {
+  border-left: 3px solid rgba(74, 222, 128, 0.55);
+}
+
+.chat-meta {
+  font-size: 0.65rem;
+  color: var(--muted);
+  margin-bottom: 0.25rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.agent-chat-scroll .chat-body {
+  font-size: 0.8125rem;
+  color: var(--text);
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.decision-block {
+  flex-shrink: 0;
 }
 
 .decision-hint {
@@ -425,40 +924,29 @@ button.ghost.active {
   margin: 0.2rem 0 0;
 }
 
-.llm-panel {
-  flex: 1;
-  min-height: 0;
-  display: none;
-  flex-direction: column;
+.outcome-modal .modal-header {
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
 }
 
-.llm-panel.show {
-  display: flex;
+.outcome-modal-header--danger {
+  background: linear-gradient(180deg, #fef2f2 0%, #ffffff 100%) !important;
+  border-bottom-color: rgba(248, 113, 113, 0.35) !important;
 }
 
-.llm-panel h3 {
-  margin: 0 0 0.25rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  flex-shrink: 0;
+.outcome-modal-header--success {
+  background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%) !important;
+  border-bottom-color: rgba(34, 197, 94, 0.35) !important;
 }
 
-pre.llm {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-  white-space: pre-wrap;
-  background: #111427;
-  padding: 0.45rem 0.55rem;
-  border-radius: 8px;
-  font-size: 0.72rem;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  margin: 0;
+.outcome-modal-header--info {
+  background: linear-gradient(180deg, #f0f9ff 0%, #ffffff 100%) !important;
+  border-bottom-color: rgba(14, 165, 233, 0.4) !important;
 }
 
-@media (max-width: 860px) {
+@media (max-width: 1099px) {
   html,
-  body {
+  body.demo-body {
     overflow: auto;
     height: auto;
     min-height: 100%;
@@ -473,6 +961,14 @@ pre.llm {
 
   .app-shell {
     grid-template-columns: 1fr;
-    flex: none;
+  }
+
+  .side-stack--left,
+  .center-stack {
+    overflow: visible;
+  }
+
+  .chat-stack {
+    min-height: 280px;
   }
 }
