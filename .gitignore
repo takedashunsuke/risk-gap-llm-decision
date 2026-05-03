@@ -4,3 +4,6 @@ sample/
 # デモ Web の JSONL など（ホスト実行・Compose マウント先）
 output/*
 !output/.gitkeep
+
+# Python bytecode（demo_web）
+apps/demo_web/**/__pycache__/
