@@ -74,6 +74,10 @@
 
     <section id="main-metrics" class="mb-4">
       <h2 class="h6 fw-semibold border-bottom pb-2 mb-3">主要指標</h2>
+      <p class="small mb-3">
+        左カラムの各カードは、因子ごとに<strong>値の目安</strong>で色が変わります。<strong class="text-warning">黄色系</strong>は「注意」、<strong class="text-danger">赤色系</strong>は「強い注意」の目安です（主要指標ごとに閾値が異なります）。
+        例: <strong>R_obj</strong> は約 0.28 以上で黄味、約 0.4 以上で赤味。<strong>Gap</strong> は約 0.1 以上で黄味、<strong>Gap ≥ 0.2</strong>（要注意フラグと同条件）で赤味。<strong>T</strong> は客観リスクが閾値 <span class="font-monospace">T</span> に近づくほど黄／赤になりやすい、など。
+      </p>
       <dl class="row small mb-0">
         <dt class="col-sm-4 text-muted">客観リスク（R_obj）</dt>
         <dd class="col-sm-8">環境・人・時間プレッシャーを重み付き合成した客観側リスク（0〜1）。</dd>
@@ -92,10 +96,16 @@
 
     <section id="breakdown" class="mb-4">
       <h2 class="h6 fw-semibold border-bottom pb-2 mb-3">リスク内訳</h2>
+      <p class="small mb-3">
+        パネル上部の<strong>凡例</strong>どおり、各因子は <strong>0〜1</strong> で、<strong>横バーの長さ</strong>がその強さを表します。色は目安で、<strong>灰</strong>は低め、<strong>黄</strong>は中程度、<strong>赤</strong>は高めです（バーは数値の大小を並べて比べるためのもので、主要指標カードの黄／赤とは別ルールです）。
+      </p>
+      <p class="small mb-3">
+        並びは<strong>合成（テーマ平均）</strong>→<strong>環境・人・圧力の入力</strong>→<strong>フラグ</strong>です。合成は客観リスク <span class="font-monospace">R_obj</span> の計算にそのまま使うブロック平均で、下段はその材料となる細かいノブです。
+      </p>
 
       <h3 class="small fw-semibold mt-3 mb-2">合成（テーマ平均）</h3>
-      <p class="small mb-3">
-        環境テーマ平均・人テーマ平均・時間プレッシャーは、主要指標（とグラフ）と対応するよう分解表示しています。
+      <p class="small mb-2">
+        環境3項目の平均・人2項目の平均・時間プレッシャーは、主要指標・グラフと対応するよう出しています。
       </p>
 
       <h3 class="small fw-semibold mt-3 mb-2">環境リスク（入力）</h3>
@@ -113,7 +123,7 @@
 
       <h3 class="small fw-semibold mt-3 mb-2">圧力（入力）</h3>
       <ul class="small mb-3">
-        <li><span class="font-monospace">time</span> — 時間プレッシャー</li>
+        <li><span class="font-monospace">time</span> — 時間プレッシャー（内訳の「時間プレッシャー」行と同じ系列）</li>
         <li><span class="font-monospace">external</span> — 外部からのプレッシャー</li>
       </ul>
 

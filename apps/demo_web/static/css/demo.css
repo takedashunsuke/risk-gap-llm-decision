@@ -112,6 +112,75 @@ body.demo-body .viz-card .card-title.h6 {
   font-weight: 700;
 }
 
+/* 主要指標：リスク段階でカード背景・枠を黄／赤に */
+.metric-card {
+  transition:
+    background-color 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.metric-card--warn {
+  background: linear-gradient(145deg, #fffbeb 0%, #ffffff 72%);
+  border-color: rgba(245, 158, 11, 0.55) !important;
+  box-shadow: 0 1px 3px rgba(245, 158, 11, 0.12);
+}
+
+.metric-card--danger {
+  background: linear-gradient(145deg, #fef2f2 0%, #ffffff 72%);
+  border-color: rgba(239, 68, 68, 0.55) !important;
+  box-shadow: 0 1px 4px rgba(239, 68, 68, 0.14);
+}
+
+.metric-card--warn .metric-val {
+  color: #b45309;
+}
+
+.metric-card--danger .metric-val {
+  color: #b91c1c;
+}
+
+/* リスク内訳：0〜1 をバーで可視化 */
+.bd-legend {
+  line-height: 1.45;
+  margin-bottom: 0.35rem;
+}
+
+.bd-item {
+  padding-bottom: 0.35rem;
+  margin-bottom: 0.12rem;
+  border-bottom: 1px solid rgba(24, 24, 27, 0.06);
+}
+
+.bd-row--top {
+  padding: 0 !important;
+  margin: 0 0 0.22rem !important;
+  border-bottom: none !important;
+}
+
+.bd-track {
+  height: 6px;
+  border-radius: 4px;
+  background: rgba(24, 24, 27, 0.09);
+  overflow: hidden;
+}
+
+.bd-fill {
+  height: 100%;
+  min-width: 2px;
+  border-radius: 4px;
+  background: #94a3b8;
+  transition: width 0.2s ease;
+}
+
+.bd-fill--mid {
+  background: linear-gradient(90deg, #fcd34d, #f59e0b);
+}
+
+.bd-fill--high {
+  background: linear-gradient(90deg, #fb923c, #ef4444);
+}
+
 /* 引率カード: 人格の概要＋LLM へ渡す本文（1 ブロック） */
 .guide-persona-block {
   max-height: 10rem;
@@ -187,8 +256,9 @@ body.demo-body .viz-card .card-title.h6 {
 
 /* 右カラム：チャット／LLM は外枠の高さ固定・本文のみスクロール */
 .agent-chat-scroll {
-  height: 12.5rem;
-  flex: 0 0 12.5rem;
+  /* 三人ぶんの吹き出しが概ね見える高さ */
+  height: 15.5rem;
+  flex: 0 0 15.5rem;
   overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -198,9 +268,9 @@ body.demo-body .viz-card .card-title.h6 {
 
 /* LLM：高さ固定・本文だけ縦スクロール */
 .llm-panel-scroll {
-  height: 10rem;
-  min-height: 10rem;
-  max-height: 10rem;
+  height: 8rem;
+  min-height: 8rem;
+  max-height: 8rem;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 0.65rem 0.75rem;
