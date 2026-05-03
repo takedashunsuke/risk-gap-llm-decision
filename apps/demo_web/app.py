@@ -8,7 +8,7 @@ import os
 import re
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, Literal, Optional, Tuple
+from typing import Any, Dict, List, Literal, Optional, Tuple
 
 import requests
 from fastapi import FastAPI, HTTPException
@@ -26,11 +26,112 @@ _OUTPUT_DEFAULT = Path(__file__).resolve().parent.parent.parent / "output"
 OUTPUT_DIR = Path(os.environ.get("DEMO_OUTPUT_DIR", str(_OUTPUT_DEFAULT)))
 RUN_LOG = OUTPUT_DIR / "demo_runs.jsonl"
 
-_sim: RiskSimulator = new_simulator()
-
 DEFAULT_GUIDE_PERSONALITY = (
     "経験が豊富で安全最優先。隊員の疲労を見て無理に詰めず、適宜休憩を挟むタイプ。"
 )
+
+# 引率プリセット: UI のプルダウンとリセット時のシミュ初期値 + LLM 人格テキスト
+# 「sim」は RiskSimulator のフィールドのサブセット（指定したものだけ上書き）
+GUIDE_PERSONAS: Dict[str, Dict[str, Any]] = {
+    "safety_first": {
+        "label": "安全重視・慎重",
+        "description": "過信バイアス低め・中止コスト低め。無理に詰めず休憩を挟む前提の人格。",
+        "personality": (
+            "経験が豊富で安全最優先。隊員の疲労と視界を細かく見て、"
+            "無理に行程を詰めず適宜休憩を挟む。タイトな日程より隊の余裕を選ぶ。"
+        ),
+        "sim": {
+            "bias": 0.08,
+            "cost_stop": 0.14,
+            "weather": 0.12,
+            "visibility": 0.18,
+            "fatigue": 0.12,
+            "time_pressure": 0.16,
+            "external_pressure": 0.12,
+        },
+    },
+    "pace_push": {
+        "label": "行程・締切重視",
+        "description": "時間・外部プレッシャー高め。ルートを進めたがる初期状態。",
+        "personality": (
+            "行程表と締切を意識しがちで、少しペースを押し気味。"
+            "それでも危険シグナル（視界・疲労の急上昇）が出たら減速はするが、"
+            "最初は「まだ行ける」寄りに読みがち。"
+        ),
+        "sim": {
+            "bias": 0.14,
+            "cost_stop": 0.2,
+            "time_pressure": 0.3,
+            "external_pressure": 0.24,
+            "weather": 0.14,
+            "visibility": 0.19,
+            "fatigue": 0.14,
+        },
+    },
+    "optimist": {
+        "label": "楽観・実績過信",
+        "description": "過信バイアス高め。客観より楽観的に見えやすい初期ギャップ。",
+        "personality": (
+            "過去の成功体験を信じ「だいたい大丈夫」と読みがち。"
+            "隊の余裕はあるが、ギャップが開きやすい楽観ムードを引率に反映する。"
+        ),
+        "sim": {
+            "bias": 0.2,
+            "cost_stop": 0.22,
+            "weather": 0.13,
+            "visibility": 0.16,
+            "fatigue": 0.11,
+            "attention_loss": 0.09,
+        },
+    },
+    "weather_watch": {
+        "label": "天候・視界警戒",
+        "description": "環境入力が厳しめ。数値上もリスクが積み上がりやすい出発点。",
+        "personality": (
+            "降水・ガス・気温を過敏に気にする。視界や天候が少し崩れただけで"
+            "休憩や待機を検討し、リカバリを優先しがち。"
+        ),
+        "sim": {
+            "weather": 0.24,
+            "visibility": 0.28,
+            "temp_risk": 0.17,
+            "fatigue": 0.14,
+            "attention_loss": 0.12,
+            "time_pressure": 0.18,
+            "bias": 0.1,
+        },
+    },
+}
+
+
+def _initial_guide_persona_id() -> str:
+    env_id = os.environ.get("DEMO_GUIDE_PERSONA_ID", "").strip()
+    if env_id and env_id in GUIDE_PERSONAS:
+        return env_id
+    return next(iter(GUIDE_PERSONAS))
+
+
+_selected_guide_persona_id: str = _initial_guide_persona_id()
+
+
+def _persona_sim_kw(persona_id: str) -> Dict[str, Any]:
+    entry = GUIDE_PERSONAS.get(persona_id) or {}
+    sim = entry.get("sim")
+    if not isinstance(sim, dict):
+        return {}
+    return dict(sim)
+
+
+def _initial_guide_agent_from_env() -> bool:
+    v = os.environ.get("DEMO_GUIDE_AGENT", "").strip().lower()
+    return v in ("1", "true", "yes", "on")
+
+
+# Ollama 引率の ON/OFF（環境変数でプロセス起動時の初期値。画面スイッチで上書き）
+_guide_agent_ui: bool = _initial_guide_agent_from_env()
+
+
+_sim: RiskSimulator = new_simulator(max_steps=40, **_persona_sim_kw(_selected_guide_persona_id))
 
 
 class DecideBody(BaseModel):
@@ -41,20 +142,42 @@ class ResetBody(BaseModel):
     max_steps: int = 40
 
 
+class GuidePersonaBody(BaseModel):
+    id: str
+
+
+class GuideAgentBody(BaseModel):
+    enabled: bool
+
+
 def _guide_agent_enabled() -> bool:
-    v = os.environ.get("DEMO_GUIDE_AGENT", "").strip().lower()
-    return v in ("1", "true", "yes", "on")
+    return _guide_agent_ui
 
 
 def _guide_personality() -> str:
     raw = os.environ.get("DEMO_GUIDE_PERSONALITY", "").strip()
-    return raw or DEFAULT_GUIDE_PERSONALITY
+    if raw:
+        return raw
+    entry = GUIDE_PERSONAS.get(_selected_guide_persona_id) or {}
+    return str(entry.get("personality") or DEFAULT_GUIDE_PERSONALITY)
 
 
 def _guide_config() -> Dict[str, Any]:
+    personas_list = [
+        {
+            "id": kid,
+            "label": str(v.get("label") or kid),
+            "description": str(v.get("description") or ""),
+        }
+        for kid, v in GUIDE_PERSONAS.items()
+    ]
+    env_personality = bool(os.environ.get("DEMO_GUIDE_PERSONALITY", "").strip())
     return {
         "agent_enabled": _guide_agent_enabled(),
         "personality": _guide_personality(),
+        "selected_persona_id": _selected_guide_persona_id,
+        "personas": personas_list,
+        "personality_env_override": env_personality,
     }
 
 
@@ -131,6 +254,76 @@ def _fallback_step_kind(sim: RiskSimulator) -> Literal["trek", "rest"]:
     return "rest" if is_rest else "trek"
 
 
+PARTY_LEADER_LABEL = "引率・朔"
+PARTY_MEMBER_A_LABEL = "隊員・遥"
+PARTY_MEMBER_B_LABEL = "隊員・楓"
+
+
+def _leader_fallback_line(action: Literal["trek", "rest"]) -> str:
+    if action == "rest":
+        return "ここで一息つこう。荷物を下ろして水分と体温を整える。"
+    return "このまま進む。足元と間隔に注意して、報連相は省略しない。"
+
+
+def _party_member_lines(sim: RiskSimulator, action: Literal["trek", "rest"]) -> Tuple[str, str]:
+    """隊員ふたりの返答（現在メトリクスに応じて文言を少し変える）。"""
+    m = sim.metrics()
+    hum = m.get("human") or {}
+    envo = m.get("env") or {}
+    fatigue = float(hum.get("fatigue") or 0)
+    vis = float(envo.get("visibility") or 0)
+    gap_d = bool(m.get("gap_danger"))
+    if action == "rest":
+        line_a = "休めるなら助かる。肩がこってきてた。"
+        line_b = "了解。風向きも見とく。"
+        if fatigue > 0.38:
+            line_a = "正直キツかった…休憩ありがたい。"
+        elif fatigue > 0.28:
+            line_a = "足が重い。ここで詰めなくて正解だと思う。"
+        return line_a, line_b
+    line_a = "進むなら荷重心は低めで。岩屑あるから。"
+    line_b = "視界、ちゃんと確認してからね。"
+    if vis < 0.28:
+        line_b = "ガスってきてる？ピッチ長くしないほうがいいんじゃ。"
+    if gap_d:
+        line_a = "楽観ムード強くない？様子、ちゃんと見てる？"
+    return line_a, line_b
+
+
+def _party_chat_entries(
+    sim: RiskSimulator,
+    action: Literal["trek", "rest"],
+    leader_content: str,
+) -> List[Dict[str, Any]]:
+    ma, mb = _party_member_lines(sim, action)
+    return [
+        {
+            "role": "assistant",
+            "kind": "party",
+            "speaker": "leader",
+            "speaker_label": PARTY_LEADER_LABEL,
+            "content": leader_content.strip(),
+            "action": action,
+        },
+        {
+            "role": "assistant",
+            "kind": "party",
+            "speaker": "member_a",
+            "speaker_label": PARTY_MEMBER_A_LABEL,
+            "content": ma,
+            "action": action,
+        },
+        {
+            "role": "assistant",
+            "kind": "party",
+            "speaker": "member_b",
+            "speaker_label": PARTY_MEMBER_B_LABEL,
+            "content": mb,
+            "action": action,
+        },
+    ]
+
+
 def _ollama_guide_plan_next_step(sim: RiskSimulator, personality: str) -> Tuple[Literal["trek", "rest"], str]:
     """次の1ステップを trek / rest で選ばせる。失敗時は従来と同じ 6 ステップ周期にフォールバック。"""
     m = sim.metrics()
@@ -141,7 +334,7 @@ def _ollama_guide_plan_next_step(sim: RiskSimulator, personality: str) -> Tuple[
     prompt = (
         "あなたは登山パーティの引率者です。次の「引率者の人格」に従い、この直後の1ステップだけ"
         "「trek」（登行・移動を続ける）か「rest」（休憩してリカバリ）かを選んでください。\n\n"
-        f"【引率者の人格（環境変数 DEMO_GUIDE_PERSONALITY）】\n{personality}\n\n"
+        f"【選択中の引率者人格】\n{personality}\n\n"
         "【現在の状態（数値は事実。捏造しない）】\n"
         f"- ステップ: {sim.step} / {sim.max_steps}（まだ「次のステップ」を踏む前）\n"
         f"- R_obj={m.get('R_obj')}, R_subj={m.get('R_subj')}, Gap={m.get('Gap')}, "
@@ -176,32 +369,47 @@ def get_state() -> Dict[str, Any]:
 @app.post("/api/reset")
 def reset(body: ResetBody = ResetBody()) -> Dict[str, Any]:
     global _sim
-    _sim = new_simulator(max_steps=body.max_steps)
+    _sim = new_simulator(max_steps=body.max_steps, **_persona_sim_kw(_selected_guide_persona_id))
+    return _enrich(_sim.snapshot())
+
+
+@app.post("/api/guide_persona")
+def set_guide_persona(body: GuidePersonaBody) -> Dict[str, Any]:
+    global _selected_guide_persona_id
+    pid = body.id.strip()
+    if pid not in GUIDE_PERSONAS:
+        raise HTTPException(status_code=400, detail="unknown guide_persona id")
+    _selected_guide_persona_id = pid
+    return _enrich(_sim.snapshot())
+
+
+@app.post("/api/guide_agent")
+def set_guide_agent(body: GuideAgentBody) -> Dict[str, Any]:
+    global _guide_agent_ui
+    _guide_agent_ui = bool(body.enabled)
     return _enrich(_sim.snapshot())
 
 
 @app.post("/api/advance")
 def advance() -> Dict[str, Any]:
-    chat_entry: Optional[Dict[str, Any]] = None
+    chat_entries: Optional[List[Dict[str, Any]]] = None
     step_override: Optional[Literal["trek", "rest"]] = None
 
-    if (
-        _guide_agent_enabled()
-        and _sim.phase == "running"
-        and _sim.step < _sim.max_steps
-    ):
-        action, reasoning = _ollama_guide_plan_next_step(_sim, _guide_personality())
-        step_override = action
-        chat_entry = {
-            "role": "assistant",
-            "kind": "guide",
-            "content": reasoning,
-            "action": action,
-        }
+    if _sim.phase == "running" and _sim.step < _sim.max_steps:
+        if _guide_agent_enabled():
+            action, reasoning = _ollama_guide_plan_next_step(_sim, _guide_personality())
+            step_override = action
+            leader = reasoning.strip() if reasoning.strip() else _leader_fallback_line(action)
+            chat_entries = _party_chat_entries(_sim, action, leader)
+        else:
+            fb = _fallback_step_kind(_sim)
+            chat_entries = _party_chat_entries(
+                _sim, fb, _leader_fallback_line(fb)
+            )
 
     snap = _sim.advance(
         step_kind=step_override if _guide_agent_enabled() else None,
-        chat_entry=chat_entry if _guide_agent_enabled() else None,
+        chat_entries=chat_entries,
     )
     return _enrich(snap)
 
@@ -226,6 +434,8 @@ def decide(body: DecideBody) -> Dict[str, Any]:
                 {
                     "role": "assistant",
                     "kind": "coach",
+                    "speaker": "coach",
+                    "speaker_label": "中止コーチ",
                     "step": snap.get("step"),
                     "content": text
                     or "Ollama からの応答がありませんでした。数値と分岐はそのまま有効です。",

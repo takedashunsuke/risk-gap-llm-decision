@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>デモ使用説明 — risk-gap-llm-decision</title>
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+    crossorigin="anonymous"
+  />
+  <style>
+    .demo-guide-toc a {
+      text-decoration: none;
+    }
+    .demo-guide-toc a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body class="bg-light">
+  <div class="container py-4 pb-5" style="max-width: 46rem">
+    <p class="mb-3">
+      <a href="/" class="link-secondary small">← デモに戻る</a>
+    </p>
+    <h1 class="h4 fw-bold text-dark mb-2">デモ使用説明</h1>
+    <p class="small text-muted mb-3">
+      本ページはデモ画面の使い方・数値の意味をまとめたものです。数値定義の基準は
+      <code class="small">apps/demo_web/risk_simulator.py</code> の
+      <code class="small">RiskSimulator.metrics()</code> です。
+    </p>
+
+    <nav class="demo-guide-toc small text-muted border rounded px-3 py-2 mb-4" aria-label="このページ内">
+      <a href="#about">このデモについて</a>
+      <span class="text-secondary"> · </span>
+      <a href="#usage">操作と引率</a>
+      <span class="text-secondary"> · </span>
+      <a href="#main-metrics">主要指標</a>
+      <span class="text-secondary"> · </span>
+      <a href="#breakdown">リスク内訳</a>
+    </nav>
+
+    <section id="about" class="mb-4">
+      <h2 class="h6 fw-semibold border-bottom pb-2 mb-3">このデモについて</h2>
+      <p class="small mb-2">
+        <strong>R_obj</strong>（客観リスク）と<strong>R_subj</strong>（主観リスク）のずれ・<strong>Gap</strong> を、左の主要指標・内訳と中央のグラフ・パーティ登山で確認できます。
+      </p>
+      <p class="small mb-2">
+        ステップ進行で場所の背景が変わり、上限到達後は中央カラムの「最終判断」から「続行」か「LLM 介入 → 中止」を選べます。右カラムでは引率（Ollama）の設定、<strong>パーティチャット</strong>（引率・朔と隊員・遥・楓の掛け合い。Ollama ON 時は朔の発言がモデル生成）、中止時のコーチメッセージを表示します。
+      </p>
+      <p class="small text-muted mb-0">
+        地名とエンディングの対応はリポジトリの <code class="small">docs/design/rp_simulation.md</code> を参照してください。
+      </p>
+    </section>
+
+    <section id="usage" class="mb-4">
+      <h2 class="h6 fw-semibold border-bottom pb-2 mb-3">操作と引率（右カラム）</h2>
+      <ul class="small mb-3 ps-3">
+        <li class="mb-2">
+          シミュレーションの<strong>数値（主要指標・内訳・グラフ）</strong>は、<strong>リセット</strong>したときに、右カラムの <strong>引率人格選択</strong>（ドロップダウン）で選んでいる<strong>シナリオ（人格と初期パラメータのセット）</strong>が反映されます。
+        </li>
+        <li class="mb-2">
+          <strong>進行中</strong>にシナリオを変えた場合、現在のステップまでの数値はそのままで、<strong>次のステップから</strong>引率として渡す人格説明（および Ollama が ON のときの trek/rest 判断）だけが切り替わります。
+        </li>
+        <li class="mb-2">
+          <strong>Ollama 引率</strong>は右カラムのスイッチで ON/OFF できます。ON のときだけ各ステップでモデルが登山／休憩を選び、<strong>朔（引率）</strong>の発言として理由が出ます。隊員ふたりのセリフはシミュ状態に応じた短文です。OFF のときも三人の掛け合いは表示されますが、朔の台詞は定型です。進行ルールは約 6 ステップごとの自動休憩です。この ON/OFF は<strong>サーバを再起動するまで</strong>画面で選んだ状態が保持されます（プロセス起動時の初期値は環境変数 <code class="small">DEMO_GUIDE_AGENT</code>）。
+        </li>
+        <li class="mb-0">
+          環境変数 <code class="small">DEMO_GUIDE_PERSONALITY</code> が設定されている場合は、シナリオに書かれた人格テキストよりそちらが優先されます（画面に警告が出ます）。
+        </li>
+      </ul>
+    </section>
+
+    <section id="main-metrics" class="mb-4">
+      <h2 class="h6 fw-semibold border-bottom pb-2 mb-3">主要指標</h2>
+      <dl class="row small mb-0">
+        <dt class="col-sm-4 text-muted">客観リスク（R_obj）</dt>
+        <dd class="col-sm-8">環境・人・時間プレッシャーを重み付き合成した客観側リスク（0〜1）。</dd>
+        <dt class="col-sm-4 text-muted">主観リスク（R_subj）</dt>
+        <dd class="col-sm-8">過信バイアスにより R_obj より低めに見える側のリスク（0〜1）。</dd>
+        <dt class="col-sm-4 text-muted">ギャップ（Gap）</dt>
+        <dd class="col-sm-8"><span class="font-monospace">R_obj − R_subj</span>。客観と主観のずれ。</dd>
+        <dt class="col-sm-4 text-muted">閾値（T）</dt>
+        <dd class="col-sm-8">設計書の閾値 <span class="font-monospace">T</span>（ルール判定に使用）。</dd>
+        <dt class="col-sm-4 text-muted">中止コスト（Cost_stop）</dt>
+        <dd class="col-sm-8">中止・引き返しの負担を 0〜1 で表したモデル値。</dd>
+        <dt class="col-sm-4 text-muted">過信バイアス（bias）</dt>
+        <dd class="col-sm-8">主観が客観より楽観になる度合いのパラメータ。</dd>
+      </dl>
+    </section>
+
+    <section id="breakdown" class="mb-4">
+      <h2 class="h6 fw-semibold border-bottom pb-2 mb-3">リスク内訳</h2>
+
+      <h3 class="small fw-semibold mt-3 mb-2">合成（テーマ平均）</h3>
+      <p class="small mb-3">
+        環境テーマ平均・人テーマ平均・時間プレッシャーは、主要指標（とグラフ）と対応するよう分解表示しています。
+      </p>
+
+      <h3 class="small fw-semibold mt-3 mb-2">環境リスク（入力）</h3>
+      <ul class="small mb-3">
+        <li><span class="font-monospace">weather</span> — 天候系</li>
+        <li><span class="font-monospace">visibility</span> — 視界</li>
+        <li><span class="font-monospace">temp_risk</span> — 気温関連リスク</li>
+      </ul>
+
+      <h3 class="small fw-semibold mt-3 mb-2">人（入力）</h3>
+      <ul class="small mb-3">
+        <li><span class="font-monospace">fatigue</span> — 疲労</li>
+        <li><span class="font-monospace">attention_loss</span> — 注意散漫</li>
+      </ul>
+
+      <h3 class="small fw-semibold mt-3 mb-2">圧力（入力）</h3>
+      <ul class="small mb-3">
+        <li><span class="font-monospace">time</span> — 時間プレッシャー</li>
+        <li><span class="font-monospace">external</span> — 外部からのプレッシャー</li>
+      </ul>
+
+      <h3 class="small fw-semibold mt-3 mb-2">フラグ</h3>
+      <ul class="small mb-0">
+        <li>
+          <strong>続行ルール成立</strong> — 条件
+          <span class="font-monospace">(R<sub>subj</sub> − Cost_stop) &lt; T</span>
+          が成り立つか（はい／いいえ）。設計書の続行・中止ルールと対応。
+        </li>
+        <li>
+          <strong>Gap ≥ 0.2（要注意）</strong> — ギャップが 0.2 以上か。
+        </li>
+      </ul>
+    </section>
+
+    <p class="small text-muted mb-0">
+      設計メモはリポジトリの <code class="small">docs/design/</code>（例: <code class="small">metrics_and_breakdown_guide.md</code>）を参照してください。
+    </p>
+  </div>
+</body>
+</html>

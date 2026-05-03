@@ -13,6 +13,24 @@
   --ok: #15803d;
 }
 
+/* 主要指標・内訳の「説明」リンク（別タブ・下線＋アイコン） */
+body.demo-body .help-doc-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+body.demo-body .help-doc-link:hover {
+  text-decoration-thickness: from-font;
+}
+
+body.demo-body .help-doc-link__icon {
+  flex-shrink: 0;
+  opacity: 0.88;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -94,9 +112,66 @@ body.demo-body .viz-card .card-title.h6 {
   font-weight: 700;
 }
 
-.demo-guide-personality {
+/* 引率カード: 人格の概要＋LLM へ渡す本文（1 ブロック） */
+.guide-persona-block {
+  max-height: 10rem;
+  overflow-y: auto;
+  padding-top: 0.2rem;
+  margin-top: 0.15rem;
+}
+
+.guide-persona-lead {
+  line-height: 1.45;
+}
+
+.guide-persona-body {
   font-size: 0.8125rem;
   line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+/* 引率カード見出し行: 引率人格選択 · Ollama スイッチ */
+.guide-card-head {
+  row-gap: 0.35rem;
+}
+
+.guide-card-head .guide-card-title {
+  font-size: 0.8125rem;
+  letter-spacing: -0.01em;
+}
+
+.guide-head-sep {
+  color: var(--muted);
+  opacity: 0.65;
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+.guide-head-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.guide-agent-switch {
+  padding-left: 2.15em;
+  min-height: unset;
+}
+
+.guide-agent-switch .form-check-input {
+  margin-top: 0.15em;
+  cursor: pointer;
+}
+
+.guide-agent-switch-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.guide-persona-select {
+  font-size: 0.8125rem;
 }
 
 .chat-meta {
@@ -104,7 +179,10 @@ body.demo-body .viz-card .card-title.h6 {
 }
 
 .decision-card .decision-hint {
-  font-size: 0.8125rem;
+  font-size: 0.58rem;
+  line-height: 1.35;
+  margin: 0;
+  letter-spacing: 0.01em;
 }
 
 /* 右カラム：チャット／LLM は外枠の高さ固定・本文のみスクロール */
@@ -160,82 +238,8 @@ body.demo-body .viz-card .card-title.h6 {
   z-index: 20;
 }
 
-.lead-toolbar {
-  min-width: 0;
-}
-
 .lead-main-text {
   min-width: 0;
-}
-
-/* i ボタン：常に白アイコン（ホバー不要で視認） */
-.lead-info-btn {
-  width: 1.38rem !important;
-  height: 1.38rem !important;
-  min-width: 1.38rem;
-  min-height: 1.38rem;
-  padding: 0 !important;
-  flex-shrink: 0;
-  line-height: 0 !important;
-  color: #fff !important;
-  --bs-btn-color: #fff;
-  --bs-btn-hover-color: #fff;
-  --bs-btn-active-color: #fff;
-  --bs-btn-bg: #6c757d;
-  --bs-btn-hover-bg: #5c636a;
-  --bs-btn-border-color: #6c757d;
-  --bs-btn-hover-border-color: #5c636a;
-}
-
-.lead-info-btn:focus-visible {
-  color: #fff !important;
-}
-
-.lead-info-icon {
-  display: block;
-  color: #fff;
-}
-
-/* 外円＝stroke のみ、ドット＆字＝塗り */
-.lead-info-btn svg circle:first-of-type {
-  fill: none !important;
-  stroke: #fff !important;
-}
-
-.lead-info-btn svg circle:not(:first-of-type),
-.lead-info-btn svg path {
-  fill: #fff !important;
-  stroke: none;
-}
-
-/* Bootstrap モーダル（デモ説明）の見た目をアプリに合わせる */
-.demo-info-modal .modal-content {
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  overflow: hidden;
-}
-
-.demo-info-modal .modal-header {
-  border-bottom-color: var(--border);
-  padding: 0.55rem 0.85rem;
-  background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
-}
-
-.demo-info-modal .modal-body {
-  padding: 0.85rem 1rem;
-  line-height: 1.55;
-}
-
-.demo-info-modal .modal-body p:last-child {
-  margin-bottom: 0 !important;
-}
-
-@media (max-width: 575.98px) {
-  .demo-info-modal .modal-dialog {
-    margin-left: auto;
-    margin-right: auto;
-    max-width: calc(100% - 1rem);
-  }
 }
 
 /* メインは Bootstrap container-fluid + row（index.html） */
@@ -846,30 +850,17 @@ body.demo-body .viz-card .card-title.h6 {
   margin-bottom: 0.15rem;
 }
 
-.guide-personality-body {
-  margin: 0;
-  font-size: 0.68rem;
-  color: var(--text);
-  line-height: 1.45;
-  white-space: pre-wrap;
-}
-
-.guide-env-footnote {
-  margin: 0.45rem 0 0;
-  font-size: 0.6rem;
-  color: var(--muted);
-  line-height: 1.45;
-}
-
-.guide-env-footnote code {
-  font-size: 0.58rem;
-}
-
 .agent-chat-card {
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
   min-height: 0;
+}
+
+.agent-chat-card .agent-chat-sub {
+  font-size: 0.62rem;
+  line-height: 1.35;
+  letter-spacing: 0.02em;
 }
 
 .agent-chat-empty {
@@ -892,12 +883,36 @@ body.demo-body .viz-card .card-title.h6 {
   margin-bottom: 0;
 }
 
-.chat-bubble--guide {
-  border-left: 3px solid rgba(124, 156, 255, 0.65);
+.chat-speaker {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.15rem;
+  letter-spacing: 0.02em;
+}
+
+.chat-bubble--party {
+  border-left: 3px solid rgba(148, 163, 184, 0.55);
+}
+
+.chat-bubble--party-leader {
+  border-left-color: rgba(79, 70, 229, 0.55);
+}
+
+.chat-bubble--party-a {
+  border-left-color: rgba(234, 179, 8, 0.7);
+}
+
+.chat-bubble--party-b {
+  border-left-color: rgba(16, 185, 129, 0.6);
 }
 
 .chat-bubble--coach {
   border-left: 3px solid rgba(74, 222, 128, 0.55);
+}
+
+.chat-bubble--neutral {
+  border-left: 3px solid rgba(148, 163, 184, 0.45);
 }
 
 .chat-meta {
@@ -920,7 +935,7 @@ body.demo-body .viz-card .card-title.h6 {
 
 .decision-hint {
   color: var(--muted);
-  font-size: 0.68rem;
+  font-size: 0.58rem;
   margin: 0.2rem 0 0;
 }
 

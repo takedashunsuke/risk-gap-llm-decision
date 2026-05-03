@@ -127,6 +127,17 @@
     return x;
   }
 
+  function escHtml(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
+
+  function escAttr(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+  }
+
   function drawChart(series, maxSteps) {
     const wrap = $("chart-wrap");
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -338,40 +349,94 @@
     const gc = data.guide_config;
     const gRoot = $("guide-config-root");
     if (gRoot && gc) {
-      const on = gc.agent_enabled ? "ON" : "OFF";
-      const pers = String(gc.personality || "")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
+      const pers = escHtml(String(gc.personality || ""));
+      const personas = Array.isArray(gc.personas) ? gc.personas : [];
+      const selId = String(gc.selected_persona_id || "");
+      const envOv = !!gc.personality_env_override;
+      let opts = "";
+      for (let i = 0; i < personas.length; i++) {
+        const p = personas[i];
+        const id = String(p.id != null ? p.id : "");
+        const lab = escHtml(String(p.label != null ? p.label : id));
+        const sel = id === selId ? " selected" : "";
+        opts +=
+          `<option value="${escAttr(id)}"${sel}>${lab}</option>`;
+      }
+      let desc = "";
+      for (let j = 0; j < personas.length; j++) {
+        if (String(personas[j].id) === selId) {
+          desc = String(personas[j].description || "");
+          break;
+        }
+      }
+      const envNote = envOv
+        ? `<p class="small text-warning mb-2 mb-lg-1">環境変数 <code class="small">DEMO_GUIDE_PERSONALITY</code> が優先され、プリセットの人格文は無視されます（数値プリセットはリセット時に反映）。</p>`
+        : "";
+      const switchHint = gc.agent_enabled
+        ? "ON: 各ステップで Ollama が登山か休憩を選び、理由をチャットに表示します。このスイッチで OFF にできます。"
+        : "OFF: Ollama は使わず、約6ステップごとの自動休憩のみ。このスイッチで ON にできます。";
+      const agentChecked = gc.agent_enabled ? " checked" : "";
+      let personaBlurb = "";
+      if (desc) {
+        personaBlurb += `<p class="guide-persona-lead small text-muted mb-2 mb-md-1">${escHtml(
+          desc
+        )}</p>`;
+      }
+      personaBlurb += `<p class="guide-persona-body small text-muted mb-0">${pers}</p>`;
       gRoot.innerHTML =
         `<div class="card-body py-2 px-3">` +
-        `<h3 class="h6 mb-2 fw-semibold">引率エージェント（DEMO_GUIDE）</h3>` +
-        `<p class="small mb-1"><span class="badge ${gc.agent_enabled ? "text-bg-primary" : "text-bg-secondary"}">${on}</span></p>` +
-        `<p class="small text-muted mb-0 demo-guide-personality">${pers}</p></div>`;
+        `<div class="guide-card-head d-flex flex-wrap align-items-center gap-2 mb-2 min-w-0">` +
+        `<span class="guide-card-title fw-semibold text-body">引率人格選択</span>` +
+        `<div class="form-check form-switch guide-agent-switch mb-0">` +
+        `<input class="form-check-input" type="checkbox" role="switch" id="guide-agent-switch"${agentChecked} title="${escAttr(switchHint)}" aria-label="Ollama による引率を有効にする" />` +
+        `<label class="form-check-label guide-agent-switch-label mb-0" for="guide-agent-switch">Ollama</label>` +
+        `</div>` +
+        `</div>` +
+        `<select id="guide-persona-select" class="form-select form-select-sm guide-persona-select mb-2" aria-label="引率人格とリセット時の初期パラメータ">` +
+        opts +
+        `</select>` +
+        envNote +
+        `<div class="guide-persona-block">${personaBlurb}</div>` +
+        `</div>`;
     }
 
     const chatLog = $("agent-chat-log");
     const gchat = data.guide_chat;
     if (chatLog && Array.isArray(gchat)) {
       chatLog.innerHTML = gchat
-        .slice(-40)
+        .slice(-48)
         .map(function (e) {
           const kind = e.kind || "";
+          const speaker = String(e.speaker || "");
           const body = String(e.content || "")
             .replace(/</g, "&lt;")
             .replace(/>/g, "&gt;");
           const meta =
             "step " +
             (e.step != null ? e.step : "—") +
-            (kind ? " · " + kind : "") +
-            (e.action ? " · " + e.action : "");
-          const cls =
-            kind === "guide"
-              ? "chat-bubble chat-bubble--guide"
-              : kind === "coach"
-                ? "chat-bubble chat-bubble--coach"
-                : "chat-bubble";
+            (e.action ? " · " + e.action : "") +
+            (kind === "coach" ? " · 中止コーチ" : "");
+          let cls = "chat-bubble mb-2";
+          if (kind === "coach") {
+            cls += " chat-bubble--coach";
+          } else if (kind === "party") {
+            cls += " chat-bubble--party";
+            if (speaker === "member_a") cls += " chat-bubble--party-a";
+            else if (speaker === "member_b") cls += " chat-bubble--party-b";
+            else cls += " chat-bubble--party-leader";
+          } else if (kind === "guide") {
+            cls += " chat-bubble--party chat-bubble--party-leader";
+          } else {
+            cls += " chat-bubble--neutral";
+          }
+          const labelRaw = e.speaker_label;
+          const speakerHead =
+            labelRaw != null && String(labelRaw).trim() !== ""
+              ? `<div class="chat-speaker">${escHtml(String(labelRaw))}</div>`
+              : "";
           return (
-            `<div class="${cls} mb-2">` +
+            `<div class="${cls}">` +
+            speakerHead +
             `<div class="chat-meta">${meta}</div>` +
             `<div class="chat-body">${body}</div></div>`
           );
@@ -475,6 +540,37 @@
       lastRenderedStep = null;
       setLlmContent("");
       render(data);
+    });
+
+    document.addEventListener("change", async (ev) => {
+      const t = ev.target;
+      if (!t) return;
+      if (t.id === "guide-agent-switch") {
+        stopAutoplay();
+        try {
+          const data = await api("/api/guide_agent", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ enabled: !!t.checked }),
+          });
+          render(data);
+        } catch (err) {
+          console.error(err);
+        }
+        return;
+      }
+      if (t.id !== "guide-persona-select") return;
+      stopAutoplay();
+      try {
+        const data = await api("/api/guide_persona", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: t.value }),
+        });
+        render(data);
+      } catch (err) {
+        console.error(err);
+      }
     });
 
     $("btn-advance").addEventListener("click", async () => {

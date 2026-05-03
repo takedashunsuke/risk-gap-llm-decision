@@ -10,7 +10,7 @@
     integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
     crossorigin="anonymous"
   />
-  <link rel="stylesheet" href="/static/css/demo.css?v=rp-v6" />
+  <link rel="stylesheet" href="/static/css/demo.css?v=rp-v14" />
   <link rel="stylesheet" href="/static/css/character1.css?v=rp-v6" />
   <link rel="stylesheet" href="/static/css/character2.css?v=rp-v6" />
   <link rel="stylesheet" href="/static/css/character3.css?v=rp-v6" />
@@ -18,25 +18,37 @@
 <body class="demo-body bg-light">
   <div class="app-layout d-flex flex-column min-vh-100">
     <header class="app-header flex-shrink-0 border-bottom bg-white px-3 py-2 shadow-sm">
-      <h1 class="h5 mb-2 fw-bold text-dark">過信と判断 — ミニシミュレーション</h1>
-      <div class="d-flex align-items-start gap-2 min-w-0 lead-toolbar">
-        <p class="lead mb-0 small text-body-secondary flex-grow-1 min-w-0 lead-main-text">
-          客観・主観リスクのギャップ（Gap）を、グラフとパーティ登山のメタファで眺めながら判断します。
-        </p>
-        <button
-          type="button"
-          class="btn btn-secondary btn-sm rounded-circle lead-info-btn d-inline-flex align-items-center justify-content-center flex-shrink-0 text-white"
-          data-bs-toggle="modal"
-          data-bs-target="#demoInfoModal"
-          aria-label="このデモの説明を開く"
-        >
-          <svg class="lead-info-icon" width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
-            <circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.2" />
-            <circle cx="8" cy="5.35" r="0.85" fill="currentColor" />
-            <path fill="currentColor" d="M7.35 7.55h1.3v4.25h-1.3z" />
+      <div class="d-flex align-items-start justify-content-between gap-2 flex-wrap min-w-0 mb-2">
+        <h1 class="h5 mb-0 fw-bold text-dark min-w-0">過信と判断 — ミニシミュレーション</h1>
+        <a
+          href="/static/demo-guide.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="header-demo-guide help-doc-link link-secondary small flex-shrink-0 align-self-start"
+          aria-label="デモ使用説明を別タブで開く"
+          ><svg
+            class="help-doc-link__icon"
+            width="14"
+            height="14"
+            viewBox="0 0 16 16"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"
+            />
+            <path
+              fill-rule="evenodd"
+              d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"
+            />
           </svg>
-        </button>
+          デモ使用説明</a
+        >
       </div>
+      <p class="lead mb-0 small text-body-secondary lead-main-text">
+        客観・主観リスクのギャップ（Gap）を、グラフとパーティ登山のメタファで眺めながら判断します。
+      </p>
     </header>
 
     <main class="container-fluid flex-grow-1 d-flex flex-column min-vh-0 px-2 py-2 app-main">
@@ -56,7 +68,7 @@
         </section>
 
         <!-- 中央: グラフ・登山・操作 -->
-        <section class="col-12 col-lg-5 d-flex flex-column min-h-0 col-center" aria-label="リスク推移と登山の可視化">
+        <section class="col-12 col-lg-5 d-flex flex-column min-h-0 col-center" aria-label="リスク推移・登山の可視化・最終判断">
           <div class="center-stack d-flex flex-column gap-2 flex-grow-1 min-h-0 overflow-auto">
             <div class="toolbar d-flex flex-wrap align-items-center gap-2 flex-shrink-0">
               <label class="small text-muted mb-0 d-flex align-items-center gap-1">
@@ -120,27 +132,32 @@
                 <p class="trail-caption text-muted text-center mb-0 mt-1" id="trail-caption"></p>
               </div>
             </div>
-          </div>
-        </section>
 
-        <!-- 右: 判断・引率設定・チャット -->
-        <section class="col-12 col-lg-4 d-flex flex-column min-h-0 col-chat" aria-label="判断と環境変数・チャット">
-          <div class="chat-stack chat-stack--scroll d-flex flex-column gap-2 flex-grow-1 min-h-0 overflow-auto">
             <div class="card decision-card shadow-sm border flex-shrink-0">
               <div class="card-body py-2 px-3">
-                <h3 class="h6 mb-2 fw-semibold text-body">最終判断</h3>
+                <h3 class="h6 mb-2 fw-semibold text-body d-flex align-items-baseline flex-nowrap gap-2 min-w-0">
+                  <span class="flex-shrink-0">最終判断</span>
+                  <span class="decision-hint text-muted fw-normal mb-0 text-truncate min-w-0" id="decision-hint">※上限ステップまで進むと分岐できます。</span>
+                </h3>
                 <div class="d-flex flex-wrap gap-2" id="decision-row">
                   <button type="button" class="btn btn-sm btn-danger" id="btn-continue" disabled>続行（過信）</button>
                   <button type="button" class="btn btn-sm btn-success" id="btn-llm" disabled>LLM 介入 → 中止</button>
                 </div>
-                <p class="decision-hint text-muted mb-0 mt-2 small" id="decision-hint">上限ステップまで進むと分岐できます。</p>
               </div>
             </div>
+          </div>
+        </section>
+
+        <!-- 右: 引率設定・チャット -->
+        <section class="col-12 col-lg-4 d-flex flex-column min-h-0 col-chat" aria-label="引率設定とチャット">
+          <div class="chat-stack chat-stack--scroll d-flex flex-column gap-2 flex-grow-1 min-h-0 overflow-auto">
             <div class="card guide-config-card guide-config-card--top shadow-sm border flex-shrink-0" id="guide-config-root"></div>
             <div class="agent-chat-card card shadow-sm border d-flex flex-column flex-shrink-0">
               <div class="card-header py-2 px-3 flex-shrink-0">
-                <h3 class="h6 mb-0 fw-semibold">エージェントチャット（Ollama）</h3>
-                <span class="agent-chat-hint small text-muted d-block mt-1">引率・中止コーチの発言</span>
+                <h3 class="h6 mb-0 fw-semibold d-flex align-items-baseline flex-wrap gap-2 min-w-0">
+                  <span class="flex-shrink-0">パーティチャット</span>
+                  <span class="agent-chat-sub text-muted fw-normal">朔・遥・楓（引率 ON 時は朔が LLM）</span>
+                </h3>
               </div>
               <div
                 id="agent-chat-log"
@@ -161,34 +178,6 @@
         </section>
       </div>
     </main>
-  </div>
-
-  <div
-    class="modal fade demo-info-modal"
-    id="demoInfoModal"
-    tabindex="-1"
-    aria-labelledby="demoInfoModalLabel"
-    aria-hidden="true"
-  >
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
-      <div class="modal-content shadow">
-        <div class="modal-header">
-          <h2 class="modal-title fs-6 fw-semibold" id="demoInfoModalLabel">このデモについて</h2>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
-        </div>
-        <div class="modal-body small text-body">
-          <p class="mb-3">
-            <strong>R_obj</strong>（客観リスク）と<strong>R_subj</strong>（主観リスク）のずれ・<strong>Gap</strong> を、左の主要指標・内訳と中央のグラフ・パーティ登山で確認できます。
-          </p>
-          <p class="mb-3">
-            ステップ進行で場所の背景が変わり、上限到達後は「続行」か「LLM 介入 → 中止」を選べます。右カラムでは引率エージェント設定とチャット、中止時のコーチメッセージを表示します。
-          </p>
-          <p class="mb-0">
-            地名とエンディングの対応は <code class="small">docs/design/rp_simulation.md</code> を参照してください。
-          </p>
-        </div>
-      </div>
-    </div>
   </div>
 
   <div

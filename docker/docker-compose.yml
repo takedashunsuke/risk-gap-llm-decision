@@ -27,9 +27,12 @@ services:
       DEMO_OUTPUT_DIR: /app/output
       OLLAMA_BASE_URL: http://host.docker.internal:11434
       OLLAMA_MODEL: llama3.2:1b
-      # 引率者を Ollama に任せる: "1" / "true" 。無効時は 6 ステップごとの休憩ルール。
+      # 引率者を Ollama に任せる初期値: "1" / "true"（プロセス起動時のみ。以降は Web の Ollama スイッチが優先）
       # DEMO_GUIDE_AGENT: "1"
-      # 引率者の人格（日本語可。空ならアプリの既定文を使用）
+      # 既定の引率プリセット ID（UI とリセット時の初期パラメータ）:
+      # safety_first | pace_push | optimist | weather_watch
+      # DEMO_GUIDE_PERSONA_ID: "safety_first"
+      # 人格テキストを環境変数で固定するとプリセットより優先（デモ用オーバーライド）
       # DEMO_GUIDE_PERSONALITY: "急がず、無理に押さない元テクニシャン。"
     volumes:
       - ../output:/app/output
