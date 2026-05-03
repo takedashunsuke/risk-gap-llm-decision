@@ -1,0 +1,182 @@
+/* —— 登山道シーン（ロールプレイ風） —— */
+.trail-box {
+  flex: 0 1 auto;
+  margin-top: 0;
+  min-height: 0;
+  max-height: none;
+}
+
+.trail-scene--agent-on {
+  box-shadow:
+    inset 0 0 24px rgba(24, 24, 27, 0.06),
+    0 0 0 2px rgba(79, 70, 229, 0.22);
+}
+
+.trail-box h2 {
+  margin-bottom: 0.2rem;
+}
+
+.trail-scene {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: inset 0 0 24px rgba(24, 24, 27, 0.06);
+  /* 背景画像の解像度・縦横比に依存させず、表示枠の高さを一定に近づける */
+  width: 100%;
+  aspect-ratio: 400 / 110;
+  max-height: min(240px, 34vh);
+  min-height: 0;
+  height: auto;
+  flex-shrink: 0;
+}
+
+.trail-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-color: #1e293b;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  transition: opacity 0.5s ease;
+}
+
+/* 危険度のヴェール（旧 SVG の矩形と同等） */
+.trail-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  background: linear-gradient(
+    135deg,
+    rgba(127, 29, 29, 0.45) 0%,
+    rgba(12, 10, 9, 0.82) 100%
+  );
+}
+
+.trail-scene--pulse {
+  animation: trail-scene-flash 0.55s ease-out;
+}
+
+@keyframes trail-scene-flash {
+  0% {
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.15),
+      0 0 12px rgba(99, 102, 241, 0.35);
+  }
+  100% {
+    box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.35);
+  }
+}
+
+/* ピクセルキャラ（character*.css の .dot-1〜3） */
+.trail-party-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.trail-char {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+}
+
+.trail-char-anchor {
+  transform: translate(-50%, -86%);
+}
+
+.trail-char-scale {
+  transform: scale(0.2);
+  transform-origin: 50% 100%;
+}
+
+/* キャラ1・2 だけベース比 1.7 倍（0.2 × 1.7 ≈ 0.34） */
+.trail-char-scale--party-lg {
+  transform: scale(0.34);
+  transform-origin: 50% 100%;
+}
+
+.trail-char-scale--party-sm {
+  transform: scale(0.2);
+  transform-origin: 50% 100%;
+}
+
+.trail-char-scale .dot-1,
+.trail-char-scale .dot-2,
+.trail-char-scale .dot-3 {
+  margin: 0;
+}
+
+.trail-scene--danger {
+  box-shadow: inset 0 0 0 2px rgba(248, 113, 113, 0.4);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .trail-char-anchor--walk {
+    animation: trail-party-bob 0.52s ease-in-out infinite;
+  }
+}
+
+@keyframes trail-party-bob {
+  0%,
+  100% {
+    transform: translate(-50%, -86%) translateY(0);
+  }
+  50% {
+    transform: translate(-50%, -86%) translateY(-3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trail-char-anchor--walk {
+    animation: none;
+  }
+
+  .trail-scene--pulse {
+    animation: none;
+  }
+}
+
+.trail-caption {
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-align: center;
+  margin: 0.2rem 0 0;
+  line-height: 1.4;
+}
+
+/* バナー：Bootstrap .alert / .d-none と併用（display は付与クラスに任せる） */
+.banner {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.banner.accident {
+  background: rgba(220, 38, 38, 0.12);
+  border: 1px solid rgba(220, 38, 38, 0.35);
+  color: #7f1d1d;
+}
+
+.banner.avoided {
+  background: rgba(21, 128, 61, 0.1);
+  border: 1px solid rgba(21, 128, 61, 0.35);
+  color: #14532d;
+}
+
+.banner.cleared {
+  background: rgba(14, 165, 233, 0.12);
+  border: 1px solid rgba(14, 165, 233, 0.4);
+  color: #0c4a6e;
+}
+
+/* バナーは Bootstrap .alert と併用（表示切替は d-none） */
+.banner.d-none {
+  display: none !important;
+}

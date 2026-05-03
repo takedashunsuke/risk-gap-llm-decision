@@ -1,0 +1,72 @@
+/* 主要指標・内訳の「説明」リンク（別タブ・下線＋アイコン） */
+body.demo-body .help-doc-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+body.demo-body .help-doc-link:hover {
+  text-decoration-thickness: from-font;
+}
+
+body.demo-body .help-doc-link__icon {
+  flex-shrink: 0;
+  opacity: 0.88;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  margin: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+body.demo-body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+body.demo-body {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Bootstrap 踏襲しつつ全体の文字バランスをそろえる */
+body.demo-body .app-header .h5 {
+  font-size: 1.0625rem;
+  letter-spacing: -0.01em;
+}
+
+body.demo-body .app-header .lead.small {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+body.demo-body .btn-sm {
+  font-size: 0.8125rem;
+}
+
+body.demo-body .small,
+body.demo-body small {
+  font-size: 0.8125rem;
+}
+
+body.demo-body .card-title,
+body.demo-body .viz-card .card-title.h6 {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}

@@ -1,0 +1,54 @@
+/* 中央: Ollama 引率と可視化の接続 */
+.viz-llm-sync {
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.viz-sync {
+  margin: 0;
+  padding: 0.4rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #f8fafc;
+}
+
+.viz-sync-badge {
+  display: block;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  margin-bottom: 0.2rem;
+}
+
+.viz-sync-line {
+  margin: 0;
+  font-size: 0.68rem;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+.viz-sync-line code {
+  font-size: 0.62rem;
+  padding: 0.05rem 0.2rem;
+  border-radius: 4px;
+  background: rgba(24, 24, 27, 0.06);
+}
+
+.viz-sync--on {
+  border-color: rgba(79, 70, 229, 0.35);
+  background: rgba(79, 70, 229, 0.06);
+}
+
+.viz-sync--wait {
+  border-color: rgba(79, 70, 229, 0.25);
+  background: rgba(79, 70, 229, 0.04);
+}
+
+.viz-sync--off {
+  background: #fafafa;
+}
+
+.state-guide-agent .viz-sync--on .viz-sync-badge {
+  color: #4338ca;
+}

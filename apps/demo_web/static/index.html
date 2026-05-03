@@ -10,7 +10,7 @@
     integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
     crossorigin="anonymous"
   />
-  <link rel="stylesheet" href="/static/css/demo.css?v=rp-v16" />
+  <link rel="stylesheet" href="/static/css/demo.css?v=rp-v18" />
   <link rel="stylesheet" href="/static/css/character1.css?v=rp-v6" />
   <link rel="stylesheet" href="/static/css/character2.css?v=rp-v6" />
   <link rel="stylesheet" href="/static/css/character3.css?v=rp-v6" />
@@ -86,15 +86,15 @@
 
             <div class="viz-card chart-grow card border shadow-sm">
               <div class="card-body py-2 px-3 d-flex flex-column flex-grow-1 min-h-0">
-                <h2 class="h6 card-title mb-2">リスクの推移（0〜1）</h2>
+                <h2 class="h6 card-title mb-2">リスクの推移（積み上げ＋Gap）</h2>
                 <div id="chart-wrap" class="flex-grow-1 min-h-0">
                   <canvas id="chart" width="400" height="200"></canvas>
                 </div>
                 <div class="chart-legend mt-2" role="list" aria-label="グラフの凡例">
-                  <span class="chart-legend-item" role="listitem"><i class="swatch" style="background:#7c9cff;"></i>R_obj</span>
-                  <span class="chart-legend-item" role="listitem"><i class="swatch" style="background:#fbbf24;"></i>R_subj</span>
-                  <span class="chart-legend-item" role="listitem"><i class="swatch" style="background:#f87171;"></i>Gap</span>
-                  <span class="chart-legend-item" role="listitem"><i class="swatch" style="background:#94a3b8;"></i>Cost_stop</span>
+                  <span class="chart-legend-item" role="listitem"><i class="swatch swatch--bar" style="background:#7c9cff;"></i>R_obj（積み上げ）</span>
+                  <span class="chart-legend-item" role="listitem"><i class="swatch swatch--bar" style="background:#fbbf24;"></i>R_subj（積み上げ）</span>
+                  <span class="chart-legend-item" role="listitem"><i class="swatch swatch--line" style="background:#f87171;"></i>Gap（折れ線・右軸）</span>
+                  <span class="chart-legend-item" role="listitem"><i class="swatch swatch--bar" style="background:#94a3b8;"></i>Cost_stop（積み上げ）</span>
                 </div>
               </div>
             </div>
@@ -206,6 +206,10 @@
     integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
     crossorigin="anonymous"
   ></script>
-  <script defer src="/static/js/demo.js?v=rp-v6"></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"
+    crossorigin="anonymous"
+  ></script>
+  <script type="module" src="/static/js/demo/app.js?v=rp-v8"></script>
 </body>
 </html>

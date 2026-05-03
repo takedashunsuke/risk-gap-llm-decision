@@ -1,0 +1,112 @@
+/* 引率カード: 人格の概要＋LLM へ渡す本文（1 ブロック） */
+.guide-persona-block {
+  max-height: 10rem;
+  overflow-y: auto;
+  padding-top: 0.2rem;
+  margin-top: 0.15rem;
+}
+
+.guide-persona-lead {
+  line-height: 1.45;
+}
+
+.guide-persona-body {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+/* 引率カード見出し行: 引率人格選択 · Ollama スイッチ */
+.guide-card-head {
+  row-gap: 0.35rem;
+}
+
+.guide-card-head .guide-card-title {
+  font-size: 0.8125rem;
+  letter-spacing: -0.01em;
+}
+
+.guide-head-sep {
+  color: var(--muted);
+  opacity: 0.65;
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+.guide-head-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.guide-agent-switch {
+  padding-left: 2.15em;
+  min-height: unset;
+}
+
+.guide-agent-switch .form-check-input {
+  margin-top: 0.15em;
+  cursor: pointer;
+}
+
+.guide-agent-switch-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.guide-persona-select {
+  font-size: 0.8125rem;
+}
+
+.chat-meta {
+  font-size: 0.8125rem;
+}
+
+.decision-card .decision-hint {
+  font-size: 0.58rem;
+  line-height: 1.35;
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
+/* 右カラム：チャット／LLM は外枠の高さ固定・本文のみスクロール */
+.agent-chat-scroll {
+  /* 三人ぶんの吹き出しが概ね見える高さ */
+  height: 15.5rem;
+  flex: 0 0 15.5rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  background: #f8fafc;
+}
+
+/* LLM：高さ固定・本文だけ縦スクロール */
+.llm-panel-scroll {
+  height: 8rem;
+  min-height: 8rem;
+  max-height: 8rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0.65rem 0.75rem;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  background: #fafbfc;
+  border-radius: 0 0 0.375rem 0.375rem;
+}
+
+.llm-panel .llm {
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+  color: var(--text);
+}
+
+.llm-panel .llm.llm--placeholder {
+  color: var(--muted);
+}

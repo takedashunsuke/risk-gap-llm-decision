@@ -1,0 +1,28 @@
+@media (max-width: 1099px) {
+  html,
+  body.demo-body {
+    overflow: auto;
+    height: auto;
+    min-height: 100%;
+  }
+
+  .app-layout {
+    height: auto;
+    max-height: none;
+    min-height: 100vh;
+    overflow: visible;
+  }
+
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .side-stack--left,
+  .center-stack {
+    overflow: visible;
+  }
+
+  .chat-stack {
+    min-height: 280px;
+  }
+}
