@@ -84,8 +84,9 @@
   min-height: 64px;
   max-height: 22vh;
   height: 22vh;
-  background: #111427;
-  border-radius: 4px;
+  background: #e8ecf1;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 6px;
 }
 
 #chart {

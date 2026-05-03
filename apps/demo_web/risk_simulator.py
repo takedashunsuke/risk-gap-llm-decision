@@ -8,7 +8,7 @@ from dataclasses import dataclass, field, fields
 from typing import Any, Dict, List, Literal, Optional
 
 MIN_STEPS = 10
-MAX_STEPS = 100
+MAX_STEPS = 70
 # 8 ステップ相当の累積悪化を max_steps に分散するための基準
 _REF_STEPS = 8.0
 

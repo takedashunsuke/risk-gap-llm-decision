@@ -10,7 +10,7 @@
     integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
     crossorigin="anonymous"
   />
-  <link rel="stylesheet" href="/static/css/demo.css?v=rp-v18" />
+  <link rel="stylesheet" href="/static/css/demo.css?v=rp-v19" />
   <link rel="stylesheet" href="/static/css/character1.css?v=rp-v6" />
   <link rel="stylesheet" href="/static/css/character2.css?v=rp-v6" />
   <link rel="stylesheet" href="/static/css/character3.css?v=rp-v6" />
@@ -73,7 +73,7 @@
             <div class="toolbar d-flex flex-wrap align-items-center gap-2 flex-shrink-0">
               <label class="small text-muted mb-0 d-flex align-items-center gap-1">
                 上限
-                <input type="range" id="max-steps" min="10" max="100" value="40" class="form-range form-range-sm" style="width: 120px" />
+                <input type="range" id="max-steps" min="10" max="70" value="40" class="form-range form-range-sm" style="width: 120px" />
                 <span id="max-steps-val" class="fw-semibold text-primary">40</span>
               </label>
               <div class="d-flex flex-wrap gap-1">
@@ -86,15 +86,15 @@
 
             <div class="viz-card chart-grow card border shadow-sm">
               <div class="card-body py-2 px-3 d-flex flex-column flex-grow-1 min-h-0">
-                <h2 class="h6 card-title mb-2">リスクの推移（積み上げ＋Gap）</h2>
+                <h2 class="h6 card-title mb-2">リスクの推移</h2>
                 <div id="chart-wrap" class="flex-grow-1 min-h-0">
                   <canvas id="chart" width="400" height="200"></canvas>
                 </div>
                 <div class="chart-legend mt-2" role="list" aria-label="グラフの凡例">
-                  <span class="chart-legend-item" role="listitem"><i class="swatch swatch--bar" style="background:#7c9cff;"></i>R_obj（積み上げ）</span>
-                  <span class="chart-legend-item" role="listitem"><i class="swatch swatch--bar" style="background:#fbbf24;"></i>R_subj（積み上げ）</span>
-                  <span class="chart-legend-item" role="listitem"><i class="swatch swatch--line" style="background:#f87171;"></i>Gap（折れ線・右軸）</span>
-                  <span class="chart-legend-item" role="listitem"><i class="swatch swatch--bar" style="background:#94a3b8;"></i>Cost_stop（積み上げ）</span>
+                  <span class="chart-legend-item" role="listitem"><i class="swatch swatch--bar" style="background:#5b7fd6;"></i>R_obj</span>
+                  <span class="chart-legend-item" role="listitem"><i class="swatch swatch--bar" style="background:#d97706;"></i>R_subj</span>
+                  <span class="chart-legend-item" role="listitem"><i class="swatch swatch--line" style="background:#dc2626;"></i>Gap</span>
+                  <span class="chart-legend-item" role="listitem"><i class="swatch swatch--bar" style="background:#64748b;"></i>Cost_stop</span>
                 </div>
               </div>
             </div>
@@ -210,6 +210,6 @@
     src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"
     crossorigin="anonymous"
   ></script>
-  <script type="module" src="/static/js/demo/app.js?v=rp-v8"></script>
+  <script type="module" src="/static/js/demo/app.js?v=rp-v11"></script>
 </body>
 </html>
