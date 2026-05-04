@@ -8,6 +8,11 @@
   margin: 0.2rem 0 0;
 }
 
+.decision-card--inline {
+  border-left: 3px solid var(--bs-primary);
+  background: #f8fbff;
+}
+
 .outcome-modal .modal-header {
   border-top-left-radius: 0.5rem;
   border-top-right-radius: 0.5rem;

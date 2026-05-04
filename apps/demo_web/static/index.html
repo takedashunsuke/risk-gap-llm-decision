@@ -133,6 +133,18 @@
               <span class="step-pill small text-muted ms-auto" id="step-label"></span>
             </div>
 
+            <div class="card decision-card decision-card--inline shadow-sm border flex-shrink-0">
+              <div class="card-body py-2 px-3">
+                <h3 class="h6 mb-2 fw-semibold text-body d-flex align-items-baseline flex-nowrap gap-2 min-w-0">
+                  <span class="flex-shrink-0">判断イベント</span>
+                  <span class="decision-hint text-muted fw-normal mb-0 text-truncate min-w-0" id="decision-hint">※状態フラグが切り替わると判断を促します。</span>
+                </h3>
+                <div class="d-flex flex-wrap gap-2" id="decision-row">
+                  <button type="button" class="btn btn-sm btn-primary" id="btn-open-decision" disabled>判断を開く</button>
+                </div>
+              </div>
+            </div>
+
             <div class="viz-card chart-grow card border shadow-sm">
               <div class="card-body py-2 px-3 d-flex flex-column flex-grow-1 min-h-0">
                 <h2 class="h6 card-title mb-1">リスクの推移</h2>
@@ -182,17 +194,6 @@
               </div>
             </div>
 
-            <div class="card decision-card shadow-sm border flex-shrink-0">
-              <div class="card-body py-2 px-3">
-                <h3 class="h6 mb-2 fw-semibold text-body d-flex align-items-baseline flex-nowrap gap-2 min-w-0">
-                  <span class="flex-shrink-0">判断イベント</span>
-                  <span class="decision-hint text-muted fw-normal mb-0 text-truncate min-w-0" id="decision-hint">※状態フラグが切り替わると判断を促します。</span>
-                </h3>
-                <div class="d-flex flex-wrap gap-2" id="decision-row">
-                  <button type="button" class="btn btn-sm btn-primary" id="btn-open-decision" disabled>判断を開く</button>
-                </div>
-              </div>
-            </div>
           </div>
         </section>
 
