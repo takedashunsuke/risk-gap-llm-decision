@@ -114,14 +114,21 @@
           <div class="center-stack d-flex flex-column gap-2 flex-grow-1 min-h-0 overflow-auto">
             <div class="toolbar d-flex flex-wrap align-items-center gap-2 flex-shrink-0">
               <label class="small text-muted mb-0 d-flex align-items-center gap-1">
-                上限
+                計画
                 <input type="range" id="max-steps" min="10" max="70" value="40" class="form-range form-range-sm" style="width: 120px" />
                 <span id="max-steps-val" class="fw-semibold text-primary">40</span>
+                <span class="small text-muted">リセット反映</span>
               </label>
               <div class="d-flex flex-wrap gap-1">
-                <button type="button" class="btn btn-sm btn-primary" id="btn-reset">リセット</button>
-                <button type="button" class="btn btn-sm btn-primary" id="btn-advance">次のステップ</button>
-                <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-autoplay">自動再生</button>
+                <button type="button" class="btn btn-sm btn-outline-primary toolbar-icon-btn d-inline-flex align-items-center justify-content-center" id="btn-reset" aria-label="リセット" title="リセット">
+                  <img src="/static/image/reload.svg" alt="" width="16" height="16" />
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-primary toolbar-icon-btn d-inline-flex align-items-center justify-content-center" id="btn-advance" aria-label="次のステップ" title="次のステップ">
+                  <img src="/static/image/next.svg" alt="" width="16" height="16" />
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-primary toolbar-icon-btn d-inline-flex align-items-center justify-content-center" id="btn-autoplay" aria-label="自動再生" title="自動再生">
+                  <img id="btn-autoplay-icon" src="/static/image/start.svg" alt="" width="16" height="16" />
+                </button>
               </div>
               <span class="step-pill small text-muted ms-auto" id="step-label"></span>
             </div>

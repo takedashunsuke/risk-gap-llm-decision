@@ -38,6 +38,12 @@ let lastOutcomeModalKey = null;
 /** 判断モーダルを同じトリガで連打しないためのキー */
 let lastDecisionPromptKey = null;
 
+function setAutoplayIcon(isRunning) {
+  const icon = $("btn-autoplay-icon");
+  if (!icon) return;
+  icon.src = isRunning ? "/static/image/stop.svg" : "/static/image/start.svg";
+}
+
 function decisionReasonLabel(reason) {
   switch (reason) {
     case "max_steps":
@@ -84,7 +90,7 @@ function render(data) {
     prevStep !== null && data.step > prevStep && data.step > 0;
 
   const m = data.metrics || {};
-  $("step-label").textContent = `${data.step} / ${data.max_steps} · ${data.phase}`;
+  $("step-label").textContent = `${data.step} / ${data.max_steps}（進捗／計画）`;
   function metricCol(jaLabel, codeKey, val, metrics) {
     const sev = metricCardSeverityClass(codeKey, metrics);
     return (
@@ -276,7 +282,9 @@ function stopAutoplay() {
   const btn = $("btn-autoplay");
   if (btn) {
     btn.classList.remove("active");
-    btn.textContent = "自動再生";
+    btn.setAttribute("aria-label", "自動再生");
+    btn.setAttribute("title", "自動再生");
+    setAutoplayIcon(false);
   }
 }
 
@@ -286,7 +294,9 @@ function toggleAutoplay() {
     return;
   }
   $("btn-autoplay").classList.add("active");
-  $("btn-autoplay").textContent = "停止";
+  $("btn-autoplay").setAttribute("aria-label", "自動再生を停止");
+  $("btn-autoplay").setAttribute("title", "自動再生を停止");
+  setAutoplayIcon(true);
   autoplayTimer = setInterval(async () => {
     const st = await api("/api/state");
     if (st.phase !== "running" || !st.can_advance) {

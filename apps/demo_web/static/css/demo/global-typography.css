@@ -64,6 +64,23 @@ body.demo-body small {
   font-size: 0.8125rem;
 }
 
+body.demo-body .toolbar-icon-btn {
+  min-width: 2rem;
+  min-height: 2rem;
+  padding: 0.25rem;
+  border-color: var(--bs-primary);
+  background: #fff;
+}
+
+body.demo-body .toolbar-icon-btn:hover,
+body.demo-body .toolbar-icon-btn:focus,
+body.demo-body .toolbar-icon-btn:active,
+body.demo-body .toolbar-icon-btn.active {
+  border-color: var(--bs-primary);
+  background: #fff;
+  color: var(--bs-primary);
+}
+
 body.demo-body .card-title,
 body.demo-body .viz-card .card-title.h6 {
   font-size: 0.8125rem;
