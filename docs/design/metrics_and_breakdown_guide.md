@@ -13,6 +13,7 @@
 | `/static/guide/breakdown.html` | 客観リスク内訳 |
 | `/static/guide/state-flags.html` | 状態フラグ（判断用） |
 | `/static/guide/subjective.html` | 主観リスク（LLM エージェント） |
+| `/static/guide/llm-role.html` | 今回のシミュレーションにおける Ollama/LLM の役割 |
 | `/static/guide/simulator.html` | シミュレーターパターン |
 | `/static/guide/legacy.html` | ハッシュ付きリンク互換（`#main-metrics` → `metrics.html` 等へ振り分け） |
 

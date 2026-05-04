@@ -111,7 +111,7 @@ flowchart TD
 | 地名・判断ロジック | `apps/demo_web/risk_simulator.py`（`rp_zone`, `decide_*`, `_resolve_post_decision_outcome`） |
 | API | `apps/demo_web/app.py`（`_enrich` 経由で `snapshot` に `rp_zone` が載る） |
 | 背景・隊形 | `apps/demo_web/static/js/demo/trail.js`, `static/css/demo.css` |
-| デモ説明（静的） | `apps/demo_web/static/guide/`（上記 HTML と `legacy.html`）、`static/css/demo-guide.css` |
+| デモ説明（静的） | `apps/demo_web/static/guide/`（`llm-role.html` を含む各 HTML と `legacy.html`）、`static/css/demo-guide.css` |
 | 画像 | `apps/demo_web/static/image/*.jpg` |
 
 ---

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>7）今回のシミュレーションにおける Ollama/LLM の役割 — デモ使用説明</title>
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+    crossorigin="anonymous"
+  />
+  <link rel="stylesheet" href="../css/demo-guide.css" />
+</head>
+<body class="bg-light">
+  <div class="container py-4 pb-5 demo-guide-shell">
+    <nav class="demo-guide-breadcrumb" aria-label="パンくず">
+      <a href="/" class="link-secondary">← デモに戻る</a>
+      <span class="text-secondary">·</span>
+      <a href="index.html" class="link-secondary">目次</a>
+      <span class="text-secondary">·</span>
+      <span class="text-body-secondary">7）Ollama/LLM の役割</span>
+    </nav>
+
+    <h1 class="h4 fw-bold text-dark mb-2">7）今回のシミュレーションにおける Ollama/LLM の役割</h1>
+    <p class="demo-guide-lead mb-4">
+      このデモの設計は「意思決定と説明の分離」です。判断条件は Python、納得と行動変容の補助は LLM が担います。
+    </p>
+
+    <section class="demo-guide-section" id="llm-role">
+      <h2 class="h6 fw-semibold border-bottom pb-2 mb-3">キーメッセージ</h2>
+      <p class="small mb-2">
+        <strong>判断はルール、納得はLLMが担う。</strong>
+      </p>
+      <p class="small mb-3">
+        Python が客観的な危険度と条件判定を固定し、LLM はその結果を「人が理解して止まれる言葉」に変換します。
+      </p>
+      <p class="small mb-3 text-muted">
+        人は数値では止まらないが、意味なら止まれる。
+      </p>
+
+      <div class="demo-guide-table-wrap">
+        <table class="table table-sm table-bordered table-demo-guide">
+          <thead>
+            <tr>
+              <th scope="col">役割</th>
+              <th scope="col">担当</th>
+              <th scope="col">内容</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>リスク計算</td>
+              <td>Python</td>
+              <td>客観的な危険度（`R_obj` / `R_subj` / `Gap`）を算出する。</td>
+            </tr>
+            <tr>
+              <td>意思決定条件</td>
+              <td>Python</td>
+              <td>続行 / 中止の基準、判断イベントの発火、終了条件を決定する。</td>
+            </tr>
+            <tr>
+              <td>認識補正（説明）</td>
+              <td>LLM</td>
+              <td>ズレの指摘、引率チャット、サポートメッセージで理解を補助する。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="small text-muted mb-0">
+        重要なのは、LLM が判定を置き換えることではなく、判定の意味を伝えて行動変容を起こすことです。意思決定のソース・オブ・トゥルースは常に <code class="small">risk_simulator.py</code> です。
+      </p>
+    </section>
+
+    <section class="demo-guide-section" id="llm-future">
+      <h2 class="h6 fw-semibold border-bottom pb-2 mb-3">将来拡張</h2>
+      <ul class="small mb-3">
+        <li>振り返りの自動生成（判断ログから改善点を要約）</li>
+        <li>説明のパーソナライズ（同じ結果を相手に合わせた言葉で提示）</li>
+        <li>判断比較の提示（続行/中止の意味を並列表示）</li>
+      </ul>
+      <p class="small text-muted mb-0">
+        ローカル LLM の利点は、プライバシーを保ちながら低遅延で説明品質を高められる点です。将来拡張でも「判定は Python、説明は LLM」の分離を維持すると、再現性と保守性を両立できます。
+      </p>
+    </section>
+
+    <p class="demo-guide-pager small mb-0">
+      <a href="subjective.html">← 6）主観リスク（LLM エージェント）</a>
+      <span class="text-secondary mx-2">|</span>
+      <a href="simulator.html">8）シミュレーターパターン →</a>
+    </p>
+  </div>
+</body>
+</html>
