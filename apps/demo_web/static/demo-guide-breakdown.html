@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>4）客観リスク内訳 — デモ使用説明</title>
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+    crossorigin="anonymous"
+  />
+  <link rel="stylesheet" href="/static/css/demo-guide.css" />
+</head>
+<body class="bg-light">
+  <div class="container py-4 pb-5 demo-guide-shell">
+    <nav class="demo-guide-breadcrumb" aria-label="パンくず">
+      <a href="/" class="link-secondary">← デモに戻る</a>
+      <span class="text-secondary">·</span>
+      <a href="/static/demo-guide.html" class="link-secondary">目次</a>
+      <span class="text-secondary">·</span>
+      <span class="text-body-secondary">4）客観リスク内訳</span>
+    </nav>
+
+    <h1 class="h4 fw-bold text-dark mb-2">4）客観リスク内訳</h1>
+    <p class="demo-guide-lead mb-4">
+      <code>R_obj</code> の材料となる入力因子の見える化です（環境・人・圧力のバー）。<strong>続行ルールや Gap 要注意といった「状態フラグ」はここには含めません</strong>（<a href="/static/demo-guide-state-flags.html">5）状態フラグ（判断用）</a>）。
+    </p>
+
+    <section class="demo-guide-section" id="breakdown">
+      <p class="small mb-3">
+        メイン画面の<strong>客観リスク内訳</strong>パネルはタイトルと数値のみです。構造は<strong>上段の 3 本バー</strong>（<code>R_obj</code> の材料）＋<strong>タブ（平均／環境／人／圧力）</strong>です。各値は <strong>0〜1</strong>、横バーは長さで強さを表します（灰／黄／赤は内訳バー用の段階で、主要指標カードとは別ルールです）。
+      </p>
+
+      <h2 class="h6 fw-semibold border-bottom pb-2 mb-3">上段3本（合成材料）</h2>
+      <div class="demo-guide-table-wrap">
+        <table class="table table-sm table-bordered table-demo-guide">
+          <thead>
+            <tr>
+              <th scope="col">表示名</th>
+              <th scope="col">データ上のキー</th>
+              <th scope="col">役割</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>環境テーマ平均</td>
+              <td><code>breakdown.environment_avg</code></td>
+              <td><code>R_obj</code> 合成の入力のひとつ。</td>
+            </tr>
+            <tr>
+              <td>人テーマ平均</td>
+              <td><code>breakdown.human_avg</code></td>
+              <td><code>R_obj</code> 合成の入力のひとつ。</td>
+            </tr>
+            <tr>
+              <td>時間プレッシャー</td>
+              <td><code>breakdown.time_pressure</code></td>
+              <td><code>R_obj</code> 合成の入力のひとつ（<code>time_pressure</code> と同系列）。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 class="h6 fw-semibold border-bottom pb-2 mb-3 mt-4">環境リスク（タブ）</h2>
+      <div class="demo-guide-table-wrap">
+        <table class="table table-sm table-bordered table-demo-guide">
+          <thead>
+            <tr>
+              <th scope="col">キー</th>
+              <th scope="col">意味</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>weather</code></td>
+              <td>天候系</td>
+            </tr>
+            <tr>
+              <td><code>visibility</code></td>
+              <td>視界</td>
+            </tr>
+            <tr>
+              <td><code>temp_risk</code></td>
+              <td>気温関連リスク</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 class="h6 fw-semibold border-bottom pb-2 mb-3 mt-4">人（タブ）</h2>
+      <div class="demo-guide-table-wrap">
+        <table class="table table-sm table-bordered table-demo-guide">
+          <thead>
+            <tr>
+              <th scope="col">キー</th>
+              <th scope="col">意味</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>fatigue</code></td>
+              <td>疲労</td>
+            </tr>
+            <tr>
+              <td><code>attention_loss</code></td>
+              <td>注意散漫</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 class="h6 fw-semibold border-bottom pb-2 mb-3 mt-4">圧力（タブ）</h2>
+      <div class="demo-guide-table-wrap">
+        <table class="table table-sm table-bordered table-demo-guide">
+          <thead>
+            <tr>
+              <th scope="col">キー</th>
+              <th scope="col">意味</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>time</code></td>
+              <td>時間プレッシャー</td>
+            </tr>
+            <tr>
+              <td><code>external</code></td>
+              <td>外部からのプレッシャー</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <p class="small text-muted mb-4">
+      設計メモ: <code class="small">docs/design/metrics_and_breakdown_guide.md</code>
+    </p>
+
+    <p class="demo-guide-pager small mb-0">
+      <a href="/static/demo-guide-main-metrics.html">← 3）主要指標</a>
+      <span class="text-secondary mx-2">|</span>
+      <a href="/static/demo-guide-state-flags.html">5）状態フラグ（判断用） →</a>
+    </p>
+  </div>
+</body>
+</html>

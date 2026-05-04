@@ -15,7 +15,7 @@ API のスナップショットに含まれる `rp_zone`（`risk_simulator.RiskS
 | `mori_yoru`| `mori_yoru.jpg`   | **暗転エンド**（続行が危険側に倒れた結果） |
 | `umi`      | `umi.jpg`         | **ゴールエンド**（条件良好のまま踏み切った結果） |
 
-進行中は **ステップ進捗率** `step / max_steps` のみで `yama → mori → kouya` に遷移する（閾値はシミュレータ内の定数）。
+進行中は **ステップ進捗率** `step / max_steps` のみで `yama → mori → kouya` に遷移する（閾値はシミュレータ内の定数）。`step` が計画の `max_steps` を超えたあともプレイが続く場合、比率は 1 を超えうる（同一式で `kouya` 側に寄る）。
 
 ## 2. プレイ中の地名遷移（線形ルート）
 
@@ -33,28 +33,59 @@ flowchart LR
 
 ## 3. 終了時の分岐（意思決定とアウトカム）
 
-**拡張要件（vNext：多段判断・確率的帰結・チャット LLM 化・フラグ UI）は [rp_ui_and_simulation_vnext.md](rp_ui_and_simulation_vnext.md) を参照。**
+**拡張要件の全体像（vNext）は [rp_ui_and_simulation_vnext.md](rp_ui_and_simulation_vnext.md) を参照。**
 
-上限ステップに達すると「続行」か「LLM 介入 → 中止」が選べる。終了後の `rp_zone` は **`outcome`** によって決まる。
+以下は現行 `RiskSimulator` の挙動に合わせた要約である。
+
+### 3.1 判断が必要になるタイミング（トリガ）
+
+API スナップショットの `judgment_trigger_reason` / `decision_mode` で把握できる。
+
+| 理由コード（`reason_code`） | 意味 |
+|-----------------------------|------|
+| `max_steps` | 計画ステップ `max_steps` に到達したとき |
+| `late_gap_danger` | 計画の約 **85%** 以降で `Gap ≥ 0.2`（`gap_danger`）となったとき、**一度だけ**判断を促す。メトリクスが改善すると提示は下りる |
+
+優先順位は **`max_steps` > `late_gap_danger`**（計画到達時は途中トリガより優先）。
+
+### 3.2 既定モード（`legacy_decision == false`）
+
+判断を選んでも **即 `phase = ended` にならない**。その後 **`advance()`** でステップが進み、計画ステップを超えた区間で帰結が決まる。
+
+- **続行（`continue`）** … `step > max_steps` のあとの各 `advance` 後に、メトリクスに基づく**事故確率の抽選**があり、当たれば `outcome = accident`。一定ステップ経過で `cleared` もありうる（実装は `risk_simulator.py` の `_resolve_post_decision_outcome`）。
+- **中止（`llm_stop`）** … 一定ステップ経過で `outcome = avoided`。
+- **進行上限** … シミュレータ全体のステップ上限は **`MAX_STEPS`（70）**。`can_advance` が `false` になるとこれ以上進めない。
 
 ```mermaid
 flowchart TD
-  D[上限到達で判断] --> L[llm_stop]
-  D --> C[continue]
-  L --> H[outcome: avoided]
-  H --> Z1[rp_zone: home]
-  C --> Q{R_obj 高 / Gap 危険?}
-  Q -->|yes| A1[outcome: accident]
-  A1 --> Z2[rp_zone: mori_yoru]
-  Q -->|no| G[outcome: cleared]
-  G --> Z3[rp_zone: umi]
+  subgraph T[判断トリガ]
+    A[max_steps 到達]
+    B[late_gap_danger]
+  end
+  T --> C[続行 / LLM中止 を選択]
+  C --> D[phase は running のまま継続可能]
+  D --> E[advance で step 進行]
+  E --> F{step が max_steps を超えた後}
+  F -->|last_decision continue| G[事故抽選または cleared]
+  F -->|last_decision llm_stop| H[avoided]
 ```
 
-- **`avoided`（中止）** → `home`（「荒野で一度立ち止まり帰る」＝安全側の語りに合わせた帰還画面）
-- **`accident`（続行・危険側）** → `mori_yoru`（「そのまま突き進み引き返せない」イメージ）
-- **`cleared`（続行・条件良好）** → `umi`（ゴール）
+終了後の `rp_zone` は **`outcome`** によって決まる（下表）。
 
-`continue` の二分は `decide_continue()` 内で、概ね **`gap_danger` または `R_obj ≥ 0.42`** を危険側とみなす（チューニング可能）。
+| `outcome` | `rp_zone` | ナラティブの目安 |
+|-----------|-----------|------------------|
+| `avoided` | `home` | 帰還・回避 |
+| `accident` | `mori_yoru` | 暗転 |
+| `cleared` | `umi` | ゴール |
+
+### 3.3 レガシーモード（`legacy_decision == true`）
+
+従来どおり、**計画ステップ到達時の判断だけ**が有効で、選択後 **即 `ended`**。
+
+- **`continue`** … `gap_danger` または `R_obj ≥ 0.42` を危険側とみなし、`accident` / `cleared` を**決定論的**に分岐（チューニングは `decide_continue()` 内）。
+- **`llm_stop`** … `avoided` で即終了。
+
+デモ UI のリセット API では既定では切り替えない。コードから `new_simulator(..., legacy_decision=True)` が必要。
 
 ## 4. パーティ表示（キャラクターと動き）
 
@@ -73,11 +104,16 @@ flowchart TD
 
 | 種別 | パス |
 |------|------|
-| 地名ロジック | `apps/demo_web/risk_simulator.py`（`rp_zone`, `decide_continue`） |
+| 地名・判断ロジック | `apps/demo_web/risk_simulator.py`（`rp_zone`, `decide_*`, `_resolve_post_decision_outcome`） |
 | API | `apps/demo_web/app.py`（`_enrich` 経由で `snapshot` に `rp_zone` が載る） |
-| 背景・隊形 | `apps/demo_web/static/js/demo.js`, `static/css/demo.css` |
+| 背景・隊形 | `apps/demo_web/static/js/demo/trail.js`, `static/css/demo.css` |
+| デモ説明（静的） | `apps/demo_web/static/demo-guide.html`, `demo-guide-about.html`, `demo-guide-usage.html`, `demo-guide-main-metrics.html`, `demo-guide-breakdown.html`, `demo-guide-state-flags.html`, `demo-guide-subjective-llm.html`, `demo-guide-simulator.html`, `demo-guide-metrics.html`（リダイレクト）, `static/css/demo-guide.css` |
 | 画像 | `apps/demo_web/static/image/*.jpg` |
 
 ---
 
-**改版メモ**: 閾値（`yama`/`mori` の境界、`R_obj` の続行判定）はバランス調整で変わりうる。変更時は本書のセクション 2・3 とコードのコメントを同期させること。
+**改版メモ**: 閾値（`yama`/`mori` の境界、判断トリガの比率・事故確率、`R_obj` のレガシー続行判定）はバランス調整で変わりうる。変更時は本書のセクション 2・3 とコードのコメントを同期させること。
+
+| 日付 | 内容 |
+|------|------|
+| 2026-05-04 | 多段判断・トリガ・既定／レガシー分岐を反映 |

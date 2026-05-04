@@ -1,0 +1,157 @@
+/* デモ使用説明系ページ共通（demo-guide*.html） */
+
+.demo-guide-shell {
+  max-width: 52rem;
+}
+
+.demo-guide-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.65rem;
+  font-size: 0.8125rem;
+  margin-bottom: 1rem;
+}
+
+.demo-guide-breadcrumb a {
+  text-decoration: none;
+}
+
+.demo-guide-breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.demo-guide-lead {
+  font-size: 0.875rem;
+  color: var(--bs-secondary-color);
+  margin-bottom: 1rem;
+}
+
+/* 章末：前後ページへ */
+.demo-guide-pager {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--bs-border-color-translucent);
+}
+
+.demo-guide-pager a {
+  text-decoration: none;
+}
+
+.demo-guide-pager a:hover {
+  text-decoration: underline;
+}
+
+/* 目次ページ：縦一列 */
+.demo-guide-toc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.375rem;
+  background: #fff;
+  overflow: hidden;
+}
+
+.demo-guide-toc-list li {
+  margin: 0;
+  border-bottom: 1px solid var(--bs-border-color-translucent);
+}
+
+.demo-guide-toc-list li:last-child {
+  border-bottom: none;
+}
+
+.demo-guide-toc-list a {
+  display: block;
+  padding: 0.65rem 1rem;
+  text-decoration: none;
+  color: var(--bs-body-color);
+  font-size: 0.9375rem;
+}
+
+.demo-guide-toc-list a:hover {
+  background-color: var(--bs-secondary-bg);
+}
+
+/* 各ページ内の縦目次 */
+.demo-guide-page-nav {
+  list-style: none;
+  padding: 0.35rem 0.85rem;
+  margin: 0 0 1.25rem;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.375rem;
+  background: #fff;
+}
+
+.demo-guide-page-nav li {
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--bs-border-color-translucent);
+  font-size: 0.875rem;
+}
+
+.demo-guide-page-nav li:last-child {
+  border-bottom: none;
+}
+
+.demo-guide-page-nav a {
+  text-decoration: none;
+  color: var(--bs-secondary-color);
+}
+
+.demo-guide-page-nav a:hover {
+  text-decoration: underline;
+  color: var(--bs-body-color);
+}
+
+/* セクション枠 */
+.demo-guide-section {
+  background: #fff;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.375rem;
+  padding: 1rem 1.15rem 1.15rem;
+  margin-bottom: 1.25rem;
+}
+
+.demo-guide-section h2 {
+  margin-top: 0;
+}
+
+/* 表：横スクロールしやすく */
+.demo-guide-table-wrap {
+  overflow-x: auto;
+  margin-bottom: 0.75rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-demo-guide {
+  font-size: 0.8125rem;
+  margin-bottom: 0;
+}
+
+.table-demo-guide thead th {
+  background-color: var(--bs-gray-100);
+  font-weight: 600;
+  white-space: nowrap;
+  border-bottom-width: 1px;
+}
+
+.table-demo-guide td,
+.table-demo-guide th {
+  vertical-align: top;
+  padding: 0.5rem 0.65rem;
+}
+
+.table-demo-guide code {
+  font-size: 0.78rem;
+}
+
+.demo-guide-note {
+  font-size: 0.8125rem;
+  color: var(--bs-secondary-color);
+  margin-bottom: 0;
+}
+
+.demo-guide-kbd {
+  font-size: 0.78rem;
+}

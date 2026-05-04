@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3）主要指標 — デモ使用説明</title>
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+    crossorigin="anonymous"
+  />
+  <link rel="stylesheet" href="/static/css/demo-guide.css" />
+</head>
+<body class="bg-light">
+  <div class="container py-4 pb-5 demo-guide-shell">
+    <nav class="demo-guide-breadcrumb" aria-label="パンくず">
+      <a href="/" class="link-secondary">← デモに戻る</a>
+      <span class="text-secondary">·</span>
+      <a href="/static/demo-guide.html" class="link-secondary">目次</a>
+      <span class="text-secondary">·</span>
+      <span class="text-body-secondary">3）主要指標</span>
+    </nav>
+
+    <h1 class="h4 fw-bold text-dark mb-2">3）主要指標</h1>
+    <p class="demo-guide-lead mb-4">
+      数値の基準は <code class="small">apps/demo_web/risk_simulator.py</code> の
+      <code class="small">RiskSimulator.metrics()</code> です。カード色の閾値は
+      <code class="small">static/js/demo/metrics-breakdown.js</code> の
+      <code class="small">metricCardSeverityClass</code> と一致します。
+    </p>
+
+    <section class="demo-guide-section" id="main-metrics">
+      <p class="small mb-3">
+        左カラムの各カードは<strong>値の目安</strong>で色が変わります。<strong class="text-warning">黄色系</strong>は「注意」、<strong class="text-danger">赤色系</strong>は「強い注意」の目安です。
+      </p>
+      <p class="small mb-3">
+        画面左の<strong>状態フラグ</strong>（続行ルール／Gap 要注意）の意味と、シミュレータの判断との関係は、客観リスク内訳とは別枠の <a href="/static/demo-guide-state-flags.html">5）状態フラグ（判断用）</a>にまとめています。
+      </p>
+
+      <h2 class="h6 fw-semibold border-bottom pb-2 mb-3">用語の定義</h2>
+      <div class="demo-guide-table-wrap">
+        <table class="table table-sm table-bordered table-demo-guide">
+          <thead>
+            <tr>
+              <th scope="col">表示名</th>
+              <th scope="col">キー</th>
+              <th scope="col">説明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>客観リスク</td>
+              <td><code>R_obj</code></td>
+              <td>環境・人・時間プレッシャーを重み付き合成した客観側リスク（0〜1）。</td>
+            </tr>
+            <tr>
+              <td>主観リスク</td>
+              <td><code>R_subj</code></td>
+              <td>過信バイアスにより <code>R_obj</code> より低めに見える側のリスク（0〜1）。</td>
+            </tr>
+            <tr>
+              <td>ギャップ</td>
+              <td><code>Gap</code></td>
+              <td><code>R_obj − R_subj</code>。客観と主観のずれ。</td>
+            </tr>
+            <tr>
+              <td>閾値</td>
+              <td><code>T</code></td>
+              <td>設計書の閾値 <span class="font-monospace">T</span>（続行ルール等に使用）。</td>
+            </tr>
+            <tr>
+              <td>中止コスト</td>
+              <td><code>Cost_stop</code></td>
+              <td>中止・引き返しの負担を 0〜1 で表したモデル値。</td>
+            </tr>
+            <tr>
+              <td>過信バイアス</td>
+              <td><code>bias</code></td>
+              <td>主観が客観より楽観になる度合いのパラメータ。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 class="h6 fw-semibold border-bottom pb-2 mb-3 mt-4">カード色の目安（注意／強い注意）</h2>
+      <p class="small text-muted mb-2">
+        閾値はデモ UI の実装に合わせています（既定の <code>T</code> は 0.6）。
+      </p>
+      <div class="demo-guide-table-wrap">
+        <table class="table table-sm table-bordered table-demo-guide">
+          <thead>
+            <tr>
+              <th scope="col">主要指標</th>
+              <th scope="col">注意（黄系）</th>
+              <th scope="col">強い注意（赤系）</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>R_obj</code></td>
+              <td>約 0.28 以上</td>
+              <td>約 0.4 以上</td>
+            </tr>
+            <tr>
+              <td><code>R_subj</code></td>
+              <td>約 0.26 以上</td>
+              <td>約 0.38 以上</td>
+            </tr>
+            <tr>
+              <td><code>Gap</code></td>
+              <td>約 0.1 以上（※）</td>
+              <td><code>gap_danger</code> または約 0.2 以上（※）</td>
+            </tr>
+            <tr>
+              <td><code>T</code></td>
+              <td><code>R_obj</code> が約 <code>0.72×T</code> 以上</td>
+              <td><code>R_obj</code> が約 <code>0.92×T</code> 以上</td>
+            </tr>
+            <tr>
+              <td><code>Cost_stop</code></td>
+              <td>約 0.24 以上</td>
+              <td>約 0.32 以上</td>
+            </tr>
+            <tr>
+              <td><code>bias</code></td>
+              <td>約 0.13 以上</td>
+              <td>約 0.18 以上</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small text-muted mb-0">
+        ※ <code>Gap</code> は要注意フラグ（<code>gap_danger</code>）とカード強調が連動します。フラグの役割は <a href="/static/demo-guide-state-flags.html">5）状態フラグ（判断用）</a>を参照。
+      </p>
+    </section>
+
+    <p class="demo-guide-pager small mb-0">
+      <a href="/static/demo-guide-usage.html">← 2）操作と引率</a>
+      <span class="text-secondary mx-2">|</span>
+      <a href="/static/demo-guide-breakdown.html">4）客観リスク内訳 →</a>
+    </p>
+  </div>
+</body>
+</html>

@@ -169,8 +169,8 @@ function render(data) {
     if (bDet) bDet.innerHTML = renderBreakdownDetail(m);
 
   const canDecide = !!data.can_decide && data.phase === "running";
-  $("btn-advance").disabled =
-    data.phase !== "running" || data.step >= data.max_steps;
+  const canAdvance = !!data.can_advance && data.phase === "running";
+  $("btn-advance").disabled = !canAdvance;
   $("btn-continue").disabled = !canDecide;
   $("btn-llm").disabled = !canDecide;
 
@@ -199,7 +199,7 @@ function render(data) {
     pulseTrailScene();
   }
 
-  if (data.phase !== "running" || data.step >= data.max_steps) {
+  if (!canAdvance) {
     stopAutoplay();
   }
 
@@ -227,7 +227,7 @@ function toggleAutoplay() {
   $("btn-autoplay").textContent = "停止";
   autoplayTimer = setInterval(async () => {
     const st = await api("/api/state");
-    if (st.phase !== "running" || st.step >= st.max_steps) {
+    if (st.phase !== "running" || !st.can_advance) {
       stopAutoplay();
       return;
     }

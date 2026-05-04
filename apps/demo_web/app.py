@@ -395,7 +395,7 @@ def advance() -> Dict[str, Any]:
     chat_entries: Optional[List[Dict[str, Any]]] = None
     step_override: Optional[Literal["trek", "rest"]] = None
 
-    if _sim.phase == "running" and _sim.step < _sim.max_steps:
+    if _sim.can_advance():
         if _guide_agent_enabled():
             action, reasoning = _ollama_guide_plan_next_step(_sim, _guide_personality())
             step_override = action
