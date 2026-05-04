@@ -10,14 +10,14 @@
     integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
     crossorigin="anonymous"
   />
-  <link rel="stylesheet" href="/static/css/demo-guide.css" />
+  <link rel="stylesheet" href="../css/demo-guide.css" />
 </head>
 <body class="bg-light">
   <div class="container py-4 pb-5 demo-guide-shell">
     <nav class="demo-guide-breadcrumb" aria-label="パンくず">
       <a href="/" class="link-secondary">← デモに戻る</a>
       <span class="text-secondary">·</span>
-      <a href="/static/demo-guide.html" class="link-secondary">目次</a>
+      <a href="index.html" class="link-secondary">目次</a>
       <span class="text-secondary">·</span>
       <span class="text-body-secondary">1）デモについて</span>
     </nav>
@@ -32,7 +32,7 @@
         <strong>R_obj</strong>（客観リスク）と<strong>R_subj</strong>（主観リスク）のずれ・<strong>Gap</strong> を、左の主要指標・<strong>客観リスク内訳</strong>と中央のグラフ・パーティ登山で確認できます。ヘッダー文言どおり、客観は<strong>外部環境</strong>の数値、主観は<strong>パーティ・引率（人的エージェント）</strong>のニュアンスと対応づけて読めます。
       </p>
       <p class="small mb-2">
-        ステップ進行で場所の背景が変わります。中央カラムの「最終判断」は、<strong>計画ステップ到達時</strong>に加え、<strong>遅い局面で Gap が要注意になった場合</strong>などに選べることがあります（理由コードは API の <code class="small">judgment_trigger_reason</code> 等。詳細は<a href="/static/demo-guide-simulator.html">シミュレーターパターン</a>）。
+        ステップ進行で場所の背景が変わります。中央カラムの「最終判断」は、<strong>計画ステップ到達時</strong>に加え、<strong>遅い局面で Gap が要注意になった場合</strong>などに選べることがあります（理由コードは API の <code class="small">judgment_trigger_reason</code> 等。詳細は<a href="simulator.html">シミュレーターパターン</a>）。
       </p>
       <p class="small mb-2">
         判断後もシミュレーションが即終了しない場合があり、<strong>絶対上限（最大 70 ステップ）</strong>まで進行できます。エンディングと地名の対応は <code class="small">docs/design/rp_simulation.md</code> を参照してください。
@@ -43,9 +43,9 @@
     </section>
 
     <p class="demo-guide-pager small mb-0">
-      <a href="/static/demo-guide.html">← 目次</a>
+      <a href="index.html">← 目次</a>
       <span class="text-secondary mx-2">|</span>
-      <a href="/static/demo-guide-usage.html">2）操作と引率 →</a>
+      <a href="usage.html">2）操作と引率 →</a>
     </p>
   </div>
 </body>

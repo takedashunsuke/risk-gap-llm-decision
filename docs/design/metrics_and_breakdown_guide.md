@@ -2,19 +2,19 @@
 
 デモ UI 左カラムに表示する数値の意味。**ソース・オブ・トゥルース**は `apps/demo_web/risk_simulator.py` の `metrics()`。
 
-ユーザー向けの読み物は次を参照し、設計メモと齟齬が出ないよう同期する。
+ユーザー向けの読み物は **`/static/guide/`** 配下を参照し、設計メモと齟齬が出ないよう同期する。
 
-- **`/static/demo-guide.html`** … 目次
-- **`/static/demo-guide-about.html`** … デモについて
-- **`/static/demo-guide-usage.html`** … 操作と引率
-- **`/static/demo-guide-main-metrics.html`** … 主要指標
-- **`/static/demo-guide-breakdown.html`** … 客観リスク内訳
-- **`/static/demo-guide-state-flags.html`** … 状態フラグ（判断用）
-- **`/static/demo-guide-subjective-llm.html`** … 主観リスク（LLM エージェント）
-- **`/static/demo-guide-simulator.html`** … シミュレーターパターン
-- **`/static/demo-guide-metrics.html`** … 旧URL互換（`#main-metrics` 等のハッシュで上記へリダイレクト）
-
-旧 URL **`/static/metrics-guide.html`** は **`/static/demo-guide-metrics.html`**（ハッシュ維持、→ 上記のいずれか）へリダイレクトする。
+| 正式URL | 内容 |
+|--------|------|
+| `/static/guide/index.html` | 目次 |
+| `/static/guide/about.html` | デモについて |
+| `/static/guide/usage.html` | 操作と引率 |
+| `/static/guide/metrics.html` | 主要指標 |
+| `/static/guide/breakdown.html` | 客観リスク内訳 |
+| `/static/guide/state-flags.html` | 状態フラグ（判断用） |
+| `/static/guide/subjective.html` | 主観リスク（LLM エージェント） |
+| `/static/guide/simulator.html` | シミュレーターパターン |
+| `/static/guide/legacy.html` | ハッシュ付きリンク互換（`#main-metrics` → `metrics.html` 等へ振り分け） |
 
 ---
 
