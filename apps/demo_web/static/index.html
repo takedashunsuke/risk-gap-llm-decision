@@ -200,6 +200,7 @@
         <!-- 右: 引率設定・チャット -->
         <section class="col-12 col-lg-4 d-flex flex-column min-h-0 col-chat" aria-label="引率設定とチャット">
           <div class="chat-stack chat-stack--scroll d-flex flex-column gap-2 flex-grow-1 min-h-0 overflow-auto">
+            <div class="card shadow-sm border flex-shrink-0" id="pattern-summary-root"></div>
             <div class="card guide-config-card guide-config-card--top shadow-sm border flex-shrink-0" id="guide-config-root"></div>
             <div class="agent-chat-card card shadow-sm border d-flex flex-column flex-shrink-0">
               <div class="card-header py-2 px-3 flex-shrink-0">
@@ -215,18 +216,23 @@
                 aria-live="polite"
               ></div>
             </div>
-            <div id="llm-wrap" class="llm-panel card border shadow-sm flex-shrink-0">
-              <div class="card-header py-2 px-3 border-bottom">
-                <h3 class="h6 mb-0 fw-semibold">LLM サポートメッセージ</h3>
-              </div>
-              <div class="llm-panel-scroll">
-                <pre class="llm mb-0" id="llm-text"></pre>
-              </div>
-            </div>
           </div>
         </section>
       </div>
     </main>
+  </div>
+
+  <div class="toast-container position-fixed bottom-0 end-0 p-3 llm-toast-container">
+    <div id="llm-toast" class="toast llm-toast" role="status" aria-live="polite" aria-atomic="true" data-bs-autohide="false">
+      <div class="toast-header">
+        <strong class="me-auto">LLM サポート</strong>
+        <small class="text-body-secondary">判断時アドバイス</small>
+        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="閉じる"></button>
+      </div>
+      <div class="toast-body">
+        <pre class="llm mb-0" id="llm-text"></pre>
+      </div>
+    </div>
   </div>
 
   <div

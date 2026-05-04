@@ -114,8 +114,9 @@ function render(data) {
     metricCol("過信バイアス", "bias", m.bias, m);
 
   const gc = data.guide_config;
+  const pRoot = $("pattern-summary-root");
   const gRoot = $("guide-config-root");
-  if (gRoot && gc) {
+  if (gc) {
     const pers = escHtml(String(gc.personality || ""));
     const personas = Array.isArray(gc.personas) ? gc.personas : [];
     const selId = String(gc.selected_persona_id || "");
@@ -129,9 +130,11 @@ function render(data) {
       opts += `<option value="${escAttr(id)}"${sel}>${lab}</option>`;
     }
     let desc = "";
+    let selLabel = "";
     for (let j = 0; j < personas.length; j++) {
       if (String(personas[j].id) === selId) {
         desc = String(personas[j].description || "");
+        selLabel = String(personas[j].label || personas[j].id || "");
         break;
       }
     }
@@ -149,21 +152,30 @@ function render(data) {
       )}</p>`;
     }
     personaBlurb += `<p class="guide-persona-body small text-muted mb-0">${pers}</p>`;
-    gRoot.innerHTML =
-      `<div class="card-body py-2 px-3">` +
-      `<div class="guide-card-head d-flex flex-wrap align-items-center gap-2 mb-2 min-w-0">` +
-      `<span class="guide-card-title fw-semibold text-body">引率人格選択</span>` +
-      `<div class="form-check form-switch guide-agent-switch mb-0">` +
-      `<input class="form-check-input" type="checkbox" role="switch" id="guide-agent-switch"${agentChecked} title="${escAttr(switchHint)}" aria-label="Ollama による引率を有効にする" />` +
-      `<label class="form-check-label guide-agent-switch-label mb-0" for="guide-agent-switch">Ollama</label>` +
-      `</div>` +
-      `</div>` +
-      `<select id="guide-persona-select" class="form-select form-select-sm guide-persona-select mb-2" aria-label="引率人格とリセット時の初期パラメータ">` +
-      opts +
-      `</select>` +
-      envNote +
-      `<div class="guide-persona-block">${personaBlurb}</div>` +
-      `</div>`;
+    if (pRoot) {
+      pRoot.innerHTML =
+        `<div class="card-body py-2 px-3">` +
+        `<h3 class="h6 mb-2 fw-semibold">シミュレーションパターン</h3>` +
+        `<div class="pattern-name fw-semibold mb-1">${escHtml(selLabel || "未選択")}</div>` +
+        `<div class="guide-persona-block">${personaBlurb}</div>` +
+        `</div>`;
+    }
+    if (gRoot) {
+      gRoot.innerHTML =
+        `<div class="card-body py-2 px-3">` +
+        `<div class="guide-card-head d-flex flex-wrap align-items-center gap-2 mb-2 min-w-0">` +
+        `<span class="guide-card-title fw-semibold text-body">引率人格選択</span>` +
+        `<div class="form-check form-switch guide-agent-switch mb-0">` +
+        `<input class="form-check-input" type="checkbox" role="switch" id="guide-agent-switch"${agentChecked} title="${escAttr(switchHint)}" aria-label="Ollama による引率を有効にする" />` +
+        `<label class="form-check-label guide-agent-switch-label mb-0" for="guide-agent-switch">Ollama</label>` +
+        `</div>` +
+        `</div>` +
+        `<select id="guide-persona-select" class="form-select form-select-sm guide-persona-select" aria-label="引率人格とリセット時の初期パラメータ">` +
+        opts +
+        `</select>` +
+        envNote +
+        `</div>`;
+    }
   }
 
   const chatLog = $("agent-chat-log");
