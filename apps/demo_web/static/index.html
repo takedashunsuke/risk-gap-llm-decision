@@ -10,7 +10,7 @@
     integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
     crossorigin="anonymous"
   />
-  <link rel="stylesheet" href="/static/css/demo.css?v=rp-v19" />
+  <link rel="stylesheet" href="/static/css/demo.css?v=rp-v26" />
   <link rel="stylesheet" href="/static/css/character1.css?v=rp-v6" />
   <link rel="stylesheet" href="/static/css/character2.css?v=rp-v6" />
   <link rel="stylesheet" href="/static/css/character3.css?v=rp-v6" />
@@ -47,22 +47,29 @@
         >
       </div>
       <p class="lead mb-0 small text-body-secondary lead-main-text">
-        客観・主観リスクのギャップ（Gap）を、グラフとパーティ登山のメタファで眺めながら判断します。
+        客観（外部環境）と主観（パーティ・引率＝人的エージェント）のギャップ（Gap）を、グラフとパーティ登山のメタファで眺めながら判断します。
       </p>
     </header>
 
     <main class="container-fluid flex-grow-1 d-flex flex-column min-vh-0 px-2 py-2 app-main">
       <div class="row g-2 g-lg-3 flex-grow-1 min-h-0">
         <!-- 左: 主要指標・内訳 -->
-        <section class="col-12 col-lg-3 d-flex flex-column min-h-0 col-env" aria-label="主要指標とリスク内訳">
+        <section class="col-12 col-lg-3 d-flex flex-column min-h-0 col-env" aria-label="主要指標と客観リスク内訳">
           <div class="side-stack side-stack--left d-flex flex-column gap-2 flex-grow-1 min-h-0 overflow-auto">
             <div class="metrics-block flex-shrink-0">
               <h2 class="col-section-title small fw-bold text-body mb-2">主要指標</h2>
               <div class="row row-cols-2 g-2" id="metrics-root"></div>
             </div>
             <div class="card breakdown-card shadow-sm border flex-shrink-1 min-h-0 d-flex flex-column">
-              <h3 class="card-header py-2 px-3 small fw-bold mb-0">リスク内訳（環境テーマ別）</h3>
-              <div class="subgrid breakdown-detail card-body py-2 px-3 pt-0 flex-grow-1 min-h-0 overflow-auto" id="breakdown"></div>
+              <h3 class="card-header py-2 px-3 small fw-bold mb-0 border-bottom flex-shrink-0">客観リスク内訳</h3>
+              <div
+                class="breakdown-summary-wrap flex-shrink-0 px-3 pb-2 border-bottom bg-white"
+                id="breakdown-summary"
+              ></div>
+              <div
+                class="breakdown-detail card-body py-2 px-2 flex-grow-1 min-h-0"
+                id="breakdown-detail"
+              ></div>
             </div>
           </div>
         </section>
@@ -86,11 +93,11 @@
 
             <div class="viz-card chart-grow card border shadow-sm">
               <div class="card-body py-2 px-3 d-flex flex-column flex-grow-1 min-h-0">
-                <h2 class="h6 card-title mb-2">リスクの推移</h2>
+                <h2 class="h6 card-title mb-1">リスクの推移</h2>
                 <div id="chart-wrap" class="flex-grow-1 min-h-0">
                   <canvas id="chart" width="400" height="200"></canvas>
                 </div>
-                <div class="chart-legend mt-2" role="list" aria-label="グラフの凡例">
+                <div class="chart-legend mt-1" role="list" aria-label="グラフの凡例">
                   <span class="chart-legend-item" role="listitem"><i class="swatch swatch--bar" style="background:#5b7fd6;"></i>R_obj</span>
                   <span class="chart-legend-item" role="listitem"><i class="swatch swatch--bar" style="background:#d97706;"></i>R_subj</span>
                   <span class="chart-legend-item" role="listitem"><i class="swatch swatch--line" style="background:#dc2626;"></i>Gap</span>
@@ -210,6 +217,6 @@
     src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"
     crossorigin="anonymous"
   ></script>
-  <script type="module" src="/static/js/demo/app.js?v=rp-v11"></script>
+  <script type="module" src="/static/js/demo/app.js?v=rp-v16"></script>
 </body>
 </html>

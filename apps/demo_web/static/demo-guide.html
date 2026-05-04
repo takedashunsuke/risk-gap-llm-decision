@@ -38,13 +38,13 @@
       <span class="text-secondary"> · </span>
       <a href="#main-metrics">主要指標</a>
       <span class="text-secondary"> · </span>
-      <a href="#breakdown">リスク内訳</a>
+      <a href="#breakdown">客観リスク内訳</a>
     </nav>
 
     <section id="about" class="mb-4">
       <h2 class="h6 fw-semibold border-bottom pb-2 mb-3">このデモについて</h2>
       <p class="small mb-2">
-        <strong>R_obj</strong>（客観リスク）と<strong>R_subj</strong>（主観リスク）のずれ・<strong>Gap</strong> を、左の主要指標・内訳と中央のグラフ・パーティ登山で確認できます。
+        <strong>R_obj</strong>（客観リスク）と<strong>R_subj</strong>（主観リスク）のずれ・<strong>Gap</strong> を、左の主要指標・<strong>客観リスク内訳</strong>と中央のグラフ・パーティ登山で確認できます。ヘッダー文言どおり、客観は<strong>外部環境</strong>の数値、主観は<strong>パーティ・引率（人的エージェント）</strong>のニュアンスと対応づけて読めます。
       </p>
       <p class="small mb-2">
         ステップ進行で場所の背景が変わり、上限到達後は中央カラムの「最終判断」から「続行」か「LLM 介入 → 中止」を選べます。右カラムでは引率（Ollama）の設定、<strong>パーティチャット</strong>（引率・朔と隊員・遥・楓の掛け合い。Ollama ON 時は朔の発言がモデル生成）、中止時のコーチメッセージを表示します。
@@ -58,7 +58,7 @@
       <h2 class="h6 fw-semibold border-bottom pb-2 mb-3">操作と引率（右カラム）</h2>
       <ul class="small mb-3 ps-3">
         <li class="mb-2">
-          シミュレーションの<strong>数値（主要指標・内訳・グラフ）</strong>は、<strong>リセット</strong>したときに、右カラムの <strong>引率人格選択</strong>（ドロップダウン）で選んでいる<strong>シナリオ（人格と初期パラメータのセット）</strong>が反映されます。
+          シミュレーションの<strong>数値（主要指標・客観リスク内訳・グラフ）</strong>は、<strong>リセット</strong>したときに、右カラムの <strong>引率人格選択</strong>（ドロップダウン）で選んでいる<strong>シナリオ（人格と初期パラメータのセット）</strong>が反映されます。
         </li>
         <li class="mb-2">
           <strong>進行中</strong>にシナリオを変えた場合、現在のステップまでの数値はそのままで、<strong>次のステップから</strong>引率として渡す人格説明（および Ollama が ON のときの trek/rest 判断）だけが切り替わります。
@@ -82,7 +82,7 @@
         <dt class="col-sm-4 text-muted">客観リスク（R_obj）</dt>
         <dd class="col-sm-8">環境・人・時間プレッシャーを重み付き合成した客観側リスク（0〜1）。</dd>
         <dt class="col-sm-4 text-muted">主観リスク（R_subj）</dt>
-        <dd class="col-sm-8">過信バイアスにより R_obj より低めに見える側のリスク（0〜1）。</dd>
+        <dd class="col-sm-8">過信バイアスにより R_obj より低めに見える側のリスク（0〜1）。右カラムの<strong>引率・パーティチャット</strong>の言葉が、ニュアンスの手がかりになります。</dd>
         <dt class="col-sm-4 text-muted">ギャップ（Gap）</dt>
         <dd class="col-sm-8"><span class="font-monospace">R_obj − R_subj</span>。客観と主観のずれ。</dd>
         <dt class="col-sm-4 text-muted">閾値（T）</dt>
@@ -95,33 +95,36 @@
     </section>
 
     <section id="breakdown" class="mb-4">
-      <h2 class="h6 fw-semibold border-bottom pb-2 mb-3">リスク内訳</h2>
-      <p class="small mb-3">
-        パネル上部の<strong>凡例</strong>どおり、各因子は <strong>0〜1</strong> で、<strong>横バーの長さ</strong>がその強さを表します。色は目安で、<strong>灰</strong>は低め、<strong>黄</strong>は中程度、<strong>赤</strong>は高めです（バーは数値の大小を並べて比べるためのもので、主要指標カードの黄／赤とは別ルールです）。
+      <h2 class="h6 fw-semibold border-bottom pb-2 mb-3">客観リスク内訳</h2>
+      <p class="small text-muted mb-2">
+        メイン画面の<strong>客観リスク内訳</strong>パネルには説明文を出していません（タイトルと数値のみ）。読み方は<strong>次段落以降のこの節</strong>にまとめています（デモ画面上部の「デモ使用説明」から本ページを開けます）。パネルでは<strong>上部に R_obj 材料の3本バーを固定</strong>し、環境・人・圧力・フラグの詳細は<strong>その下のタブで切り替え</strong>て表示します（大画面ではページ全体をビューポート高に収めています）。
       </p>
       <p class="small mb-3">
-        並びは<strong>合成（テーマ平均）</strong>→<strong>環境・人・圧力の入力</strong>→<strong>フラグ</strong>です。合成は客観リスク <span class="font-monospace">R_obj</span> の計算にそのまま使うブロック平均で、下段はその材料となる細かいノブです。
+        各因子は <strong>0〜1</strong> で、<strong>横バーの長さ</strong>がその強さを表します。色は目安で、<strong>灰</strong>は低め、<strong>黄</strong>は中程度、<strong>赤</strong>は高めです（バーは数値の大小を並べて比べるためのもので、主要指標カードの黄／赤とは別ルールです）。
+      </p>
+      <p class="small mb-3">
+        画面の並びは<strong>上段3本（R_obj の材料）</strong>→<strong>タブ内の環境・人・圧力の入力</strong>→<strong>フラグ</strong>です。上段は客観リスク <span class="font-monospace">R_obj</span> の計算にそのまま使うブロック平均で、タブはその材料となる細かいノブです。
       </p>
 
-      <h3 class="small fw-semibold mt-3 mb-2">合成（テーマ平均）</h3>
+      <h3 class="small fw-semibold mt-3 mb-2">上段3本（R_obj の材料）</h3>
       <p class="small mb-2">
-        環境3項目の平均・人2項目の平均・時間プレッシャーは、主要指標・グラフと対応するよう出しています。
+        環境テーマ平均・人テーマ平均・時間プレッシャーは、主要指標の <strong>R_obj</strong> を重み付き合成する中間値です（デモ画面の上段バーと一致）。
       </p>
 
-      <h3 class="small fw-semibold mt-3 mb-2">環境リスク（入力）</h3>
+      <h3 class="small fw-semibold mt-3 mb-2">環境リスク</h3>
       <ul class="small mb-3">
         <li><span class="font-monospace">weather</span> — 天候系</li>
         <li><span class="font-monospace">visibility</span> — 視界</li>
         <li><span class="font-monospace">temp_risk</span> — 気温関連リスク</li>
       </ul>
 
-      <h3 class="small fw-semibold mt-3 mb-2">人（入力）</h3>
+      <h3 class="small fw-semibold mt-3 mb-2">人</h3>
       <ul class="small mb-3">
         <li><span class="font-monospace">fatigue</span> — 疲労</li>
         <li><span class="font-monospace">attention_loss</span> — 注意散漫</li>
       </ul>
 
-      <h3 class="small fw-semibold mt-3 mb-2">圧力（入力）</h3>
+      <h3 class="small fw-semibold mt-3 mb-2">圧力</h3>
       <ul class="small mb-3">
         <li><span class="font-monospace">time</span> — 時間プレッシャー（内訳の「時間プレッシャー」行と同じ系列）</li>
         <li><span class="font-monospace">external</span> — 外部からのプレッシャー</li>

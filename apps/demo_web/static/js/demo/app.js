@@ -3,7 +3,11 @@
  */
 import { $, api, fmt, escHtml, escAttr } from "./util.js";
 import { setLlmContent } from "./llm-panel.js";
-import { metricCardSeverityClass, renderBreakdown } from "./metrics-breakdown.js";
+import {
+  metricCardSeverityClass,
+  renderBreakdownDetail,
+  renderBreakdownSummary,
+} from "./metrics-breakdown.js";
 import { openOutcomeModal } from "./outcome-modal.js";
 import { drawChart } from "./risk-chart.js";
 import { pulseTrailScene, updateTrail } from "./trail.js";
@@ -140,7 +144,10 @@ function render(data) {
     chatLog.scrollTop = chatLog.scrollHeight;
   }
 
-  $("breakdown").innerHTML = renderBreakdown(m);
+    const bSum = $("breakdown-summary");
+    const bDet = $("breakdown-detail");
+    if (bSum) bSum.innerHTML = renderBreakdownSummary(m);
+    if (bDet) bDet.innerHTML = renderBreakdownDetail(m);
 
   const canDecide = !!data.can_decide && data.phase === "running";
   $("btn-advance").disabled =

@@ -1,6 +1,6 @@
-/* リスク内訳：枠内でスクロール（幅・高さのはみ出しを内側に閉じる） */
+/* 客観リスク内訳カード */
 .breakdown-card {
-  flex: 0 1 auto;
+  flex: 1 1 auto;
   min-height: 0;
   min-width: 0;
   max-width: 100%;
@@ -13,19 +13,71 @@
   flex-shrink: 0;
 }
 
-.breakdown-card .subgrid,
 .breakdown-card .breakdown-detail {
   font-size: 0.8125rem;
   color: var(--muted);
   line-height: 1.4;
-  flex: 0 1 auto;
+  flex: 1 1 auto;
   min-height: 0;
   min-width: 0;
-  max-height: min(340px, 42vh);
+  max-height: none;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 内訳詳細：タブ（スクロールなし・タブで切替） */
+.breakdown-tabs {
+  min-height: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.breakdown-detail-nav {
+  flex-shrink: 0;
+  flex-wrap: nowrap;
   overflow-x: auto;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
+  overflow-y: hidden;
+  gap: 0;
+  border-bottom-color: var(--border);
+}
+
+.breakdown-detail-nav .nav-link {
+  padding: 0.28rem 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--muted);
+}
+
+.breakdown-detail-nav .nav-link.active {
+  color: var(--text);
+}
+
+.breakdown-detail-panels {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.breakdown-detail-panels .tab-pane {
+  min-height: 0;
+}
+
+.breakdown-detail-panels .tab-pane.active {
+  display: flex;
+  flex-direction: column;
+}
+
+.breakdown-detail-panels .tab-pane .breakdown-rows {
+  flex: 0 0 auto;
+}
+
+.breakdown-card .breakdown-summary-wrap {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  padding-top: 0.55rem;
 }
 
 .breakdown-rows {
@@ -45,6 +97,10 @@
 
 .bd-section:first-child {
   margin-top: 0;
+}
+
+.breakdown-rows--summary {
+  padding-top: 0.2rem;
 }
 
 .bd-row {

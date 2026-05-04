@@ -52,12 +52,7 @@
   color: #b91c1c;
 }
 
-/* リスク内訳：0〜1 をバーで可視化 */
-.bd-legend {
-  line-height: 1.45;
-  margin-bottom: 0.35rem;
-}
-
+/* 客観リスク内訳：0〜1 をバーで可視化 */
 .bd-item {
   padding-bottom: 0.35rem;
   margin-bottom: 0.12rem;

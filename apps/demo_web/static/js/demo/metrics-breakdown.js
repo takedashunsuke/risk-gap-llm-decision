@@ -80,34 +80,68 @@ function breakdownBoolRow(labelHtml, cond) {
   );
 }
 
-export function renderBreakdown(m) {
+/** 客観リスク内訳・上部固定：R_obj の合成材料となる3本のバー */
+export function renderBreakdownSummary(m) {
   const br = m.breakdown || {};
+  let h = `<div class="breakdown-rows breakdown-rows--summary">`;
+  h += breakdownBarRow("環境テーマ平均", br.environment_avg);
+  h += breakdownBarRow("人テーマ平均", br.human_avg);
+  h += breakdownBarRow("時間プレッシャー", br.time_pressure);
+  h += `</div>`;
+  return h;
+}
+
+/**
+ * タブ切替：環境 / 人 / 圧力 / フラグ（Bootstrap の tab。スクロールなし）
+ */
+export function renderBreakdownDetail(m) {
   const env = m.env || {};
   const hum = m.human || {};
   const pr = m.pressure || {};
-  let h = `<div class="breakdown-rows">`;
-  h +=
-    `<p class="bd-legend small text-muted mb-2 mb-md-1">各数値は 0〜1。バーの長さがその因子の強さです（灰＝低め・黄＝中・赤＝高めの目安）。</p>`;
-  h += `<div class="bd-section">合成（テーマ平均）</div>`;
-  h += breakdownBarRow("環境テーマ平均（環境3項目の平均）", br.environment_avg);
-  h += breakdownBarRow("人テーマ平均（疲労・注意の平均）", br.human_avg);
-  h += breakdownBarRow("時間プレッシャー（pressure と共通スケール）", br.time_pressure);
-  h += `<div class="bd-section">環境リスク（入力）</div>`;
-  h += breakdownBarRow(`天候 <span class="mono">weather</span>`, env.weather);
-  h += breakdownBarRow(`視界 <span class="mono">visibility</span>`, env.visibility);
-  h += breakdownBarRow(`気温リスク <span class="mono">temp_risk</span>`, env.temp_risk);
-  h += `<div class="bd-section">人（入力）</div>`;
-  h += breakdownBarRow(`疲労 <span class="mono">fatigue</span>`, hum.fatigue);
-  h += breakdownBarRow(`注意散漫 <span class="mono">attention_loss</span>`, hum.attention_loss);
-  h += `<div class="bd-section">圧力（入力）</div>`;
-  h += breakdownBarRow(`時間プレッシャー <span class="mono">time</span>`, pr.time);
-  h += breakdownBarRow(`外部プレッシャー <span class="mono">external</span>`, pr.external);
-  h += `<div class="bd-section">フラグ</div>`;
-  h += breakdownBoolRow(
-    `続行ルール成立 <span class="mono">(R_subj−Cost_stop)&lt;T</span>`,
-    !!m.continue_rule_holds
+  const envRows =
+    breakdownBarRow("天候", env.weather) +
+    breakdownBarRow("視界", env.visibility) +
+    breakdownBarRow("気温リスク", env.temp_risk);
+  const humRows =
+    breakdownBarRow("疲労", hum.fatigue) +
+    breakdownBarRow("注意散漫", hum.attention_loss);
+  const prRows =
+    breakdownBarRow("時間プレッシャー", pr.time) +
+    breakdownBarRow("外部プレッシャー", pr.external);
+  const flagRows =
+    breakdownBoolRow("続行ルール成立", !!m.continue_rule_holds) +
+    breakdownBoolRow("Gap ≥ 0.2", !!m.gap_danger);
+
+  return (
+    `<div class="breakdown-tabs">` +
+    `<ul class="nav nav-tabs nav-tabs-sm breakdown-detail-nav" role="tablist">` +
+    `<li class="nav-item" role="presentation">` +
+    `<button class="nav-link active" id="bd-tab-env" type="button" role="tab" data-bs-toggle="tab" data-bs-target="#bd-pane-env" aria-controls="bd-pane-env" aria-selected="true">環境</button>` +
+    `</li>` +
+    `<li class="nav-item" role="presentation">` +
+    `<button class="nav-link" id="bd-tab-human" type="button" role="tab" data-bs-toggle="tab" data-bs-target="#bd-pane-human" aria-controls="bd-pane-human" aria-selected="false">人</button>` +
+    `</li>` +
+    `<li class="nav-item" role="presentation">` +
+    `<button class="nav-link" id="bd-tab-pressure" type="button" role="tab" data-bs-toggle="tab" data-bs-target="#bd-pane-pressure" aria-controls="bd-pane-pressure" aria-selected="false">圧力</button>` +
+    `</li>` +
+    `<li class="nav-item" role="presentation">` +
+    `<button class="nav-link" id="bd-tab-flags" type="button" role="tab" data-bs-toggle="tab" data-bs-target="#bd-pane-flags" aria-controls="bd-pane-flags" aria-selected="false">フラグ</button>` +
+    `</li>` +
+    `</ul>` +
+    `<div class="tab-content breakdown-detail-panels pt-2">` +
+    `<div class="tab-pane fade show active" id="bd-pane-env" role="tabpanel" aria-labelledby="bd-tab-env" tabindex="0">` +
+    `<div class="breakdown-rows">${envRows}</div>` +
+    `</div>` +
+    `<div class="tab-pane fade" id="bd-pane-human" role="tabpanel" aria-labelledby="bd-tab-human" tabindex="0">` +
+    `<div class="breakdown-rows">${humRows}</div>` +
+    `</div>` +
+    `<div class="tab-pane fade" id="bd-pane-pressure" role="tabpanel" aria-labelledby="bd-tab-pressure" tabindex="0">` +
+    `<div class="breakdown-rows">${prRows}</div>` +
+    `</div>` +
+    `<div class="tab-pane fade" id="bd-pane-flags" role="tabpanel" aria-labelledby="bd-tab-flags" tabindex="0">` +
+    `<div class="breakdown-rows">${flagRows}</div>` +
+    `</div>` +
+    `</div>` +
+    `</div>`
   );
-  h += breakdownBoolRow("Gap ≥ 0.2（要注意）", !!m.gap_danger);
-  h += `</div>`;
-  return h;
 }
