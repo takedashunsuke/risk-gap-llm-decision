@@ -35,7 +35,8 @@ DEFAULT_GUIDE_PERSONALITY = (
 GUIDE_PERSONAS: Dict[str, Dict[str, Any]] = {
     "safety_first": {
         "label": "安全重視・慎重",
-        "description": "過信バイアス低め・中止コスト低め。無理に詰めず休憩を挟む前提の人格。",
+        # 実験パターン（Riskモデルの初期値の狙い）: 数値・条件の説明に限定する
+        "description": "過信バイアスと中止コストを抑えた出発点。途中で判断が入りやすい条件寄せ。",
         "personality": (
             "経験が豊富で安全最優先。隊員の疲労と視界を細かく見て、"
             "無理に行程を詰めず適宜休憩を挟む。タイトな日程より隊の余裕を選ぶ。"
@@ -52,7 +53,7 @@ GUIDE_PERSONAS: Dict[str, Dict[str, Any]] = {
     },
     "pace_push": {
         "label": "行程・締切重視",
-        "description": "時間・外部プレッシャー高め。ルートを進めたがる初期状態。",
+        "description": "時間圧と外部プレッシャーを高めた出発点。進行が速くなりやすい条件。",
         "personality": (
             "行程表と締切を意識しがちで、少しペースを押し気味。"
             "それでも危険シグナル（視界・疲労の急上昇）が出たら減速はするが、"
@@ -70,7 +71,7 @@ GUIDE_PERSONAS: Dict[str, Dict[str, Any]] = {
     },
     "optimist": {
         "label": "楽観・実績過信",
-        "description": "過信バイアス高め。客観より楽観的に見えやすい初期ギャップ。",
+        "description": "過信バイアスを高めた出発点。主観が先行しやすくGapが出やすい条件。",
         "personality": (
             "過去の成功体験を信じ「だいたい大丈夫」と読みがち。"
             "隊の余裕はあるが、ギャップが開きやすい楽観ムードを引率に反映する。"
@@ -86,10 +87,13 @@ GUIDE_PERSONAS: Dict[str, Dict[str, Any]] = {
     },
     "weather_watch": {
         "label": "天候・視界警戒",
-        "description": "環境入力が厳しめ。数値上もリスクが積み上がりやすい出発点。",
+        "description": (
+            "環境系の入力（weather / visibility / temp_risk）を高めに置いた出発点。"
+            "客観側の初期リスクが積み上がりやすい条件。"
+        ),
         "personality": (
-            "降水・ガス・気温を過敏に気にする。視界や天候が少し崩れただけで"
-            "休憩や待機を検討し、リカバリを優先しがち。"
+            "天候・視界の悪化を敏感に拾い、早めに待機やリカバリを検討する話し方。"
+            "数値の意味づけはシミュレーション側の初期条件に合わせる。"
         ),
         "sim": {
             "weather": 0.24,
@@ -122,6 +126,32 @@ def _persona_sim_kw(persona_id: str) -> Dict[str, Any]:
     return dict(sim)
 
 
+def _rounded_sim_preset(sim_kw: Dict[str, Any]) -> Dict[str, Any]:
+    """UI表示用: persona の sim 上書きを、そのまま読みやすく並べる。"""
+    keys = [
+        "weather",
+        "visibility",
+        "temp_risk",
+        "fatigue",
+        "attention_loss",
+        "time_pressure",
+        "external_pressure",
+        "bias",
+        "cost_stop",
+        "gap_danger_threshold",
+    ]
+    out: Dict[str, Any] = {}
+    for k in keys:
+        if k not in sim_kw:
+            continue
+        try:
+            v = float(sim_kw[k])
+        except (TypeError, ValueError):
+            continue
+        out[k] = round(v, 4)
+    return out
+
+
 def _initial_guide_agent_from_env() -> bool:
     v = os.environ.get("DEMO_GUIDE_AGENT", "").strip().lower()
     return v in ("1", "true", "yes", "on")
@@ -144,6 +174,8 @@ class ResetBody(BaseModel):
 
 class GuidePersonaBody(BaseModel):
     id: str
+    # step==0 のとき、プリセット変更を「リセット相当」にするため任意指定（UI の計画スライダーと整合）
+    max_steps: Optional[int] = None
 
 
 class GuideAgentBody(BaseModel):
@@ -168,6 +200,7 @@ def _guide_config() -> Dict[str, Any]:
             "id": kid,
             "label": str(v.get("label") or kid),
             "description": str(v.get("description") or ""),
+            "sim_preset": _rounded_sim_preset(_persona_sim_kw(kid)),
         }
         for kid, v in GUIDE_PERSONAS.items()
     ]
@@ -176,6 +209,9 @@ def _guide_config() -> Dict[str, Any]:
         "agent_enabled": _guide_agent_enabled(),
         "personality": _guide_personality(),
         "selected_persona_id": _selected_guide_persona_id,
+        "selected_sim_preset": _rounded_sim_preset(
+            _persona_sim_kw(_selected_guide_persona_id)
+        ),
         "personas": personas_list,
         "personality_env_override": env_personality,
     }
@@ -375,11 +411,21 @@ def reset(body: ResetBody = ResetBody()) -> Dict[str, Any]:
 
 @app.post("/api/guide_persona")
 def set_guide_persona(body: GuidePersonaBody) -> Dict[str, Any]:
-    global _selected_guide_persona_id
+    global _selected_guide_persona_id, _sim
     pid = body.id.strip()
     if pid not in GUIDE_PERSONAS:
         raise HTTPException(status_code=400, detail="unknown guide_persona id")
+
+    if _sim.step > 0:
+        raise HTTPException(
+            status_code=409,
+            detail="進行中のため変更できません（プリセットはリセット後に変更できます）。",
+        )
+
     _selected_guide_persona_id = pid
+    ms = body.max_steps if body.max_steps is not None else int(_sim.max_steps)
+    # step が進んでいないときだけ、プリセット変更をリセット相当として適用
+    _sim = new_simulator(max_steps=ms, **_persona_sim_kw(_selected_guide_persona_id))
     return _enrich(_sim.snapshot())
 
 

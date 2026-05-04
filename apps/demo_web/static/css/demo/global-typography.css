@@ -81,6 +81,38 @@ body.demo-body .toolbar-icon-btn.active {
   color: var(--bs-primary);
 }
 
+/* 判断イベント: 進行系（青枠）と色を分ける */
+body.demo-body .toolbar-judgment-btn {
+  border-color: #7c3aed;
+  background: #fff;
+  color: #7c3aed;
+}
+
+body.demo-body .toolbar-judgment-btn:hover:not(:disabled),
+body.demo-body .toolbar-judgment-btn:focus:not(:disabled),
+body.demo-body .toolbar-judgment-btn:active:not(:disabled) {
+  border-color: #6d28d9;
+  background: #faf5ff;
+  color: #6d28d9;
+}
+
+body.demo-body .toolbar-judgment-btn:disabled {
+  opacity: 0.55;
+}
+
+body.demo-body .toolbar-judgment-btn__icon {
+  display: block;
+  filter: brightness(0) saturate(100%) invert(27%) sepia(61%) saturate(2000%)
+    hue-rotate(250deg) brightness(92%) contrast(96%);
+}
+
+body.demo-body .toolbar-judgment-btn:hover:not(:disabled) .toolbar-judgment-btn__icon,
+body.demo-body .toolbar-judgment-btn:focus:not(:disabled) .toolbar-judgment-btn__icon,
+body.demo-body .toolbar-judgment-btn:active:not(:disabled) .toolbar-judgment-btn__icon {
+  filter: brightness(0) saturate(100%) invert(22%) sepia(66%) saturate(2000%)
+    hue-rotate(252deg) brightness(92%) contrast(96%);
+}
+
 body.demo-body .card-title,
 body.demo-body .viz-card .card-title.h6 {
   font-size: 0.8125rem;

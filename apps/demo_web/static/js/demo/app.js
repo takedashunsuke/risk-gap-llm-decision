@@ -90,6 +90,9 @@ function render(data) {
     prevStep !== null && data.step > prevStep && data.step > 0;
 
   const m = data.metrics || {};
+  function fmtMaybe(v) {
+    return v == null || Number.isNaN(Number(v)) ? "—" : fmt(v);
+  }
   $("step-label").textContent = `${data.step} / ${data.max_steps}（進捗／計画）`;
   function metricCol(jaLabel, codeKey, val, metrics) {
     const sev = metricCardSeverityClass(codeKey, metrics);
@@ -145,36 +148,66 @@ function render(data) {
       ? "ON: 各ステップで Ollama が登山か休憩を選び、理由をチャットに表示します。このスイッチで OFF にできます。"
       : "OFF: Ollama は使わず、約6ステップごとの自動休憩のみ。このスイッチで ON にできます。";
     const agentChecked = gc.agent_enabled ? " checked" : "";
-    let personaBlurb = "";
-    if (desc) {
-      personaBlurb += `<p class="guide-persona-lead small text-muted mb-2 mb-md-1">${escHtml(
-        desc
-      )}</p>`;
-    }
-    personaBlurb += `<p class="guide-persona-body small text-muted mb-0">${pers}</p>`;
+    const personaBlurb =
+      `<p class="guide-persona-body small text-muted mb-0">${pers}</p>`;
     if (pRoot) {
+      const preset =
+        gc.selected_sim_preset && typeof gc.selected_sim_preset === "object"
+          ? gc.selected_sim_preset
+          : {};
+      const presetLine =
+        `<p class="small text-muted mb-1">` +
+        `初期値（リセットで反映）: ` +
+        `weather ${fmtMaybe(preset.weather)} · visibility ${fmtMaybe(
+          preset.visibility
+        )} · temp_risk ${fmtMaybe(preset.temp_risk)} · fatigue ${fmtMaybe(
+          preset.fatigue
+        )} · attention ${fmtMaybe(preset.attention_loss)} · time ${fmtMaybe(
+          preset.time_pressure
+        )} · external ${fmtMaybe(preset.external_pressure)} · bias ${fmtMaybe(
+          preset.bias
+        )} · Cost_stop ${fmtMaybe(preset.cost_stop)}` +
+        (preset.gap_danger_threshold != null
+          ? ` · Gap閾値 ${fmt(preset.gap_danger_threshold)}`
+          : "") +
+        `</p>`;
       pRoot.innerHTML =
         `<div class="card-body py-2 px-3">` +
-        `<h3 class="h6 mb-2 fw-semibold">シミュレーションパターン</h3>` +
+        `<h3 class="h6 mb-2 fw-semibold">実験パターン（Riskモデルの初期値）</h3>` +
         `<div class="pattern-name fw-semibold mb-1">${escHtml(selLabel || "未選択")}</div>` +
-        `<div class="guide-persona-block">${personaBlurb}</div>` +
+        `<div class="pattern-summary-scroll">` +
+        (desc
+          ? `<p class="guide-persona-lead small text-muted mb-2 mb-md-1">${escHtml(desc)}</p>`
+          : `<p class="guide-persona-lead small text-muted mb-2 mb-md-1">（説明が未設定です）</p>`) +
+        presetLine +
+        `</div>` +
         `</div>`;
     }
     if (gRoot) {
       gRoot.innerHTML =
         `<div class="card-body py-2 px-3">` +
+        `<h3 class="h6 mb-2 fw-semibold">対話エージェント（LLMの話し方）</h3>` +
         `<div class="guide-card-head d-flex flex-wrap align-items-center gap-2 mb-2 min-w-0">` +
-        `<span class="guide-card-title fw-semibold text-body">引率人格選択</span>` +
+        `<span class="guide-card-title fw-semibold text-body">人格プリセット</span>` +
         `<div class="form-check form-switch guide-agent-switch mb-0">` +
         `<input class="form-check-input" type="checkbox" role="switch" id="guide-agent-switch"${agentChecked} title="${escAttr(switchHint)}" aria-label="Ollama による引率を有効にする" />` +
         `<label class="form-check-label guide-agent-switch-label mb-0" for="guide-agent-switch">Ollama</label>` +
         `</div>` +
         `</div>` +
-        `<select id="guide-persona-select" class="form-select form-select-sm guide-persona-select" aria-label="引率人格とリセット時の初期パラメータ">` +
+        `<select id="guide-persona-select" class="form-select form-select-sm guide-persona-select mb-2" aria-label="引率人格（LLMの話し方）とリセット時の初期パラメータ">` +
         opts +
         `</select>` +
         envNote +
+        `<div class="agent-persona-scroll">${personaBlurb}</div>` +
         `</div>`;
+      const personaSel = $("guide-persona-select");
+      if (personaSel) {
+        const locked = (data.step || 0) > 0;
+        personaSel.disabled = locked;
+        personaSel.title = locked
+          ? "進行中のため変更できません（リセット後に変更できます）"
+          : "人格プリセット（step 0 のときは変更でシミュレーションを初期化します）";
+      }
     }
   }
 
@@ -230,14 +263,19 @@ function render(data) {
 
   const canDecide = !!data.can_decide && data.phase === "running";
   const canAdvance = !!data.can_advance && data.phase === "running";
-  $("btn-advance").disabled = !canAdvance;
-  $("btn-open-decision").disabled = !canDecide;
   const reason = data.judgment_trigger_reason;
-  const hint = $("decision-hint");
-  if (hint) {
-    hint.textContent = canDecide
-      ? decisionReasonLabel(reason)
-      : "※状態フラグが切り替わると判断を促します。";
+  $("btn-advance").disabled = !canAdvance;
+  const btnDecision = $("btn-open-decision");
+  if (btnDecision) {
+    btnDecision.disabled = !canDecide;
+    const idleHint = "※状態フラグが切り替わると判断を促します。";
+    const hintText = canDecide ? decisionReasonLabel(reason) : idleHint;
+    btnDecision.title = hintText;
+    btnDecision.setAttribute(
+      "aria-label",
+      `判断イベント。${hintText}`
+    );
+    btnDecision.style.display = data.phase === "ended" ? "none" : "";
   }
   const reasonNode = $("decision-modal-reason");
   if (reasonNode) {
@@ -256,10 +294,6 @@ function render(data) {
     lastOutcomeModalKey = null;
   }
 
-  $("decision-row").style.display =
-    data.phase === "ended" ? "none" : "flex";
-  $("decision-hint").style.display =
-    data.phase === "ended" ? "none" : "block";
   if (canDecide) {
     const promptKey = `${data.step}:${reason || "unknown"}`;
     if (promptKey !== lastDecisionPromptKey) {
@@ -367,14 +401,26 @@ function bind() {
     if (t.id !== "guide-persona-select") return;
     stopAutoplay();
     try {
+      const ms = parseInt($("max-steps").value, 10);
       const data = await api("/api/guide_persona", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: t.value }),
+        body: JSON.stringify({ id: t.value, max_steps: ms }),
       });
+      lastRenderedStep = null;
+      setLlmContent("");
       render(data);
     } catch (err) {
       console.error(err);
+      let msg = String(err && err.message ? err.message : err);
+      try {
+        const parsed = JSON.parse(msg);
+        if (parsed && parsed.detail) msg = String(parsed.detail);
+      } catch (_) {
+        // raw text
+      }
+      window.alert(msg);
+      refresh().catch(console.error);
     }
   });
 

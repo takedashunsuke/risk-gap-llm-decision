@@ -101,6 +101,63 @@
   font-size: 0.86rem;
 }
 
+/* 実験パターン概要: 約5行ぶんの高さに固定し、溢れたらスクロール */
+.pattern-summary-scroll {
+  /* フォールバック: small 本文の想定行高（約1.45 * 0.8125rem）×5 */
+  max-height: 5.8875rem;
+  min-height: 5.8875rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-top: 0.15rem;
+  margin-top: 0.1rem;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+@supports (height: 1lh) {
+  .pattern-summary-scroll {
+    max-height: calc(5 * 1lh);
+    min-height: calc(5 * 1lh);
+  }
+}
+
+.pattern-summary-scroll .guide-persona-lead {
+  margin-bottom: 0.35rem;
+}
+
+.pattern-summary-scroll .guide-persona-lead:last-child,
+.pattern-summary-scroll .guide-persona-body:last-child {
+  margin-bottom: 0;
+}
+
+/* 対話エージェント（人格本文）: 約3行ぶんの高さに固定し、溢れたらスクロール */
+.agent-persona-scroll {
+  max-height: 3.534375rem;
+  min-height: 3.534375rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-top: 0.15rem;
+  margin-top: 0.1rem;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+@supports (height: 1lh) {
+  .agent-persona-scroll {
+    max-height: calc(3 * 1lh);
+    min-height: calc(3 * 1lh);
+  }
+}
+
+.agent-persona-scroll .guide-persona-lead {
+  margin-bottom: 0.35rem;
+}
+
+.agent-persona-scroll .guide-persona-lead:last-child,
+.agent-persona-scroll .guide-persona-body:last-child {
+  margin-bottom: 0;
+}
+
 .llm-toast-container {
   z-index: 1090;
 }
