@@ -1,4 +1,7 @@
-import { fmt, num01 } from "./util.js";
+import { siblingImportQuery } from "./asset-query.js";
+
+const q = siblingImportQuery(import.meta.url);
+const { fmt, num01 } = await import(`./util.js${q}`);
 
 /** 主要指標カード: 黄（warn）／赤（danger）。主要指標ごとに閾値が異なる */
 export function metricCardSeverityClass(key, m) {
@@ -72,15 +75,29 @@ function breakdownBarRow(labelHtml, val) {
   );
 }
 
-function breakdownBoolRow(labelHtml, cond) {
+/**
+ * 客観リスク内訳カード内で常時表示：続行ルール / Gap 危険
+ */
+export function renderRiskFlags(m) {
+  const c1 = !!m.continue_rule_holds;
+  const c2 = !!m.gap_danger;
+  const p1 = c1 ? "pill pill--flag-continue" : "pill pill--off";
+  const p2 = c2 ? "pill pill--flag-gap" : "pill pill--off";
   return (
-    `<div class="bd-row">` +
-    `<span class="bd-k">${labelHtml}</span>` +
-    `<span class="bd-v">${cond ? "はい" : "いいえ"}</span></div>`
+    `<div class="risk-flags-body">` +
+    `<div class="risk-flag-row risk-flag-row--formula">` +
+    `<span class="risk-flag-row__k">続行ルール（(Rsubj − Coststop) &lt; T）成立</span>` +
+    `<span class="${p1}">${c1 ? "はい" : "いいえ"}</span>` +
+    `</div>` +
+    `<div class="risk-flag-row">` +
+    `<span class="risk-flag-row__k">Gap ≥ 0.2</span>` +
+    `<span class="${p2}">${c2 ? "はい" : "いいえ"}</span>` +
+    `</div>` +
+    `</div>`
   );
 }
 
-/** 客観リスク内訳・上部固定：R_obj の合成材料となる3本のバー */
+/** 客観リスク内訳・「平均」タブ：R_obj の合成材料となる3本のバー */
 export function renderBreakdownSummary(m) {
   const br = m.breakdown || {};
   let h = `<div class="breakdown-rows breakdown-rows--summary">`;
@@ -92,12 +109,13 @@ export function renderBreakdownSummary(m) {
 }
 
 /**
- * タブ切替：環境 / 人 / 圧力 / フラグ（Bootstrap の tab。スクロールなし）
+ * タブ切替：平均 / 環境 / 人 / 圧力（Bootstrap tabs）
  */
 export function renderBreakdownDetail(m) {
   const env = m.env || {};
   const hum = m.human || {};
   const pr = m.pressure || {};
+  const avgRows = renderBreakdownSummary(m);
   const envRows =
     breakdownBarRow("天候", env.weather) +
     breakdownBarRow("視界", env.visibility) +
@@ -108,15 +126,15 @@ export function renderBreakdownDetail(m) {
   const prRows =
     breakdownBarRow("時間プレッシャー", pr.time) +
     breakdownBarRow("外部プレッシャー", pr.external);
-  const flagRows =
-    breakdownBoolRow("続行ルール成立", !!m.continue_rule_holds) +
-    breakdownBoolRow("Gap ≥ 0.2", !!m.gap_danger);
 
   return (
     `<div class="breakdown-tabs">` +
-    `<ul class="nav nav-tabs nav-tabs-sm breakdown-detail-nav" role="tablist">` +
+    `<ul class="nav nav-tabs nav-tabs-sm" role="tablist">` +
     `<li class="nav-item" role="presentation">` +
-    `<button class="nav-link active" id="bd-tab-env" type="button" role="tab" data-bs-toggle="tab" data-bs-target="#bd-pane-env" aria-controls="bd-pane-env" aria-selected="true">環境</button>` +
+    `<button class="nav-link active" id="bd-tab-avg" type="button" role="tab" data-bs-toggle="tab" data-bs-target="#bd-pane-avg" aria-controls="bd-pane-avg" aria-selected="true">平均</button>` +
+    `</li>` +
+    `<li class="nav-item" role="presentation">` +
+    `<button class="nav-link" id="bd-tab-env" type="button" role="tab" data-bs-toggle="tab" data-bs-target="#bd-pane-env" aria-controls="bd-pane-env" aria-selected="false">環境</button>` +
     `</li>` +
     `<li class="nav-item" role="presentation">` +
     `<button class="nav-link" id="bd-tab-human" type="button" role="tab" data-bs-toggle="tab" data-bs-target="#bd-pane-human" aria-controls="bd-pane-human" aria-selected="false">人</button>` +
@@ -124,12 +142,12 @@ export function renderBreakdownDetail(m) {
     `<li class="nav-item" role="presentation">` +
     `<button class="nav-link" id="bd-tab-pressure" type="button" role="tab" data-bs-toggle="tab" data-bs-target="#bd-pane-pressure" aria-controls="bd-pane-pressure" aria-selected="false">圧力</button>` +
     `</li>` +
-    `<li class="nav-item" role="presentation">` +
-    `<button class="nav-link" id="bd-tab-flags" type="button" role="tab" data-bs-toggle="tab" data-bs-target="#bd-pane-flags" aria-controls="bd-pane-flags" aria-selected="false">フラグ</button>` +
-    `</li>` +
     `</ul>` +
-    `<div class="tab-content breakdown-detail-panels pt-2">` +
-    `<div class="tab-pane fade show active" id="bd-pane-env" role="tabpanel" aria-labelledby="bd-tab-env" tabindex="0">` +
+    `<div class="tab-content pt-2">` +
+    `<div class="tab-pane fade show active" id="bd-pane-avg" role="tabpanel" aria-labelledby="bd-tab-avg" tabindex="0">` +
+    avgRows +
+    `</div>` +
+    `<div class="tab-pane fade" id="bd-pane-env" role="tabpanel" aria-labelledby="bd-tab-env" tabindex="0">` +
     `<div class="breakdown-rows">${envRows}</div>` +
     `</div>` +
     `<div class="tab-pane fade" id="bd-pane-human" role="tabpanel" aria-labelledby="bd-tab-human" tabindex="0">` +
@@ -137,9 +155,6 @@ export function renderBreakdownDetail(m) {
     `</div>` +
     `<div class="tab-pane fade" id="bd-pane-pressure" role="tabpanel" aria-labelledby="bd-tab-pressure" tabindex="0">` +
     `<div class="breakdown-rows">${prRows}</div>` +
-    `</div>` +
-    `<div class="tab-pane fade" id="bd-pane-flags" role="tabpanel" aria-labelledby="bd-tab-flags" tabindex="0">` +
-    `<div class="breakdown-rows">${flagRows}</div>` +
     `</div>` +
     `</div>` +
     `</div>`

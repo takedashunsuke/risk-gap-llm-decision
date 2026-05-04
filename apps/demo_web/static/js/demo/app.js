@@ -1,16 +1,35 @@
 /**
- * デモエントリ — API は同一オリジンの /api
+ * デモ本体 — entry.js から import.meta.url に ?t= 付きで読み込まれる
  */
-import { $, api, fmt, escHtml, escAttr } from "./util.js";
-import { setLlmContent } from "./llm-panel.js";
-import {
+import { siblingImportQuery } from "./asset-query.js";
+
+const q = siblingImportQuery(import.meta.url);
+const [
+  util,
+  llmPanel,
+  metricsBreakdown,
+  outcomeModal,
+  riskChart,
+  trail,
+] = await Promise.all([
+  import(`./util.js${q}`),
+  import(`./llm-panel.js${q}`),
+  import(`./metrics-breakdown.js${q}`),
+  import(`./outcome-modal.js${q}`),
+  import(`./risk-chart.js${q}`),
+  import(`./trail.js${q}`),
+]);
+
+const { $, api, fmt, escHtml, escAttr } = util;
+const { setLlmContent } = llmPanel;
+const {
   metricCardSeverityClass,
   renderBreakdownDetail,
-  renderBreakdownSummary,
-} from "./metrics-breakdown.js";
-import { openOutcomeModal } from "./outcome-modal.js";
-import { drawChart } from "./risk-chart.js";
-import { pulseTrailScene, updateTrail } from "./trail.js";
+  renderRiskFlags,
+} = metricsBreakdown;
+const { openOutcomeModal } = outcomeModal;
+const { drawChart } = riskChart;
+const { pulseTrailScene, updateTrail } = trail;
 
 let autoplayTimer = null;
 let lastRenderedStep = null;
@@ -144,9 +163,9 @@ function render(data) {
     chatLog.scrollTop = chatLog.scrollHeight;
   }
 
-    const bSum = $("breakdown-summary");
+    const bFl = $("risk-flags-strip");
     const bDet = $("breakdown-detail");
-    if (bSum) bSum.innerHTML = renderBreakdownSummary(m);
+    if (bFl) bFl.innerHTML = renderRiskFlags(m);
     if (bDet) bDet.innerHTML = renderBreakdownDetail(m);
 
   const canDecide = !!data.can_decide && data.phase === "running";

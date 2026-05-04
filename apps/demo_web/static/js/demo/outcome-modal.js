@@ -1,4 +1,7 @@
-import { $ } from "./util.js";
+import { siblingImportQuery } from "./asset-query.js";
+
+const q = siblingImportQuery(import.meta.url);
+const { $ } = await import(`./util.js${q}`);
 
 export function openOutcomeModal(data) {
   const o = data.outcome;

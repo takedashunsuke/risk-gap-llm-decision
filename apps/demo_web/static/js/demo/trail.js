@@ -1,4 +1,7 @@
-import { $ } from "./util.js";
+import { siblingImportQuery } from "./asset-query.js";
+
+const q = siblingImportQuery(import.meta.url);
+const { $ } = await import(`./util.js${q}`);
 
 const RP_BG = {
   yama: "/static/image/yama.jpg",

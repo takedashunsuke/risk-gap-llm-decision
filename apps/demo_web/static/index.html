@@ -10,10 +10,45 @@
     integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
     crossorigin="anonymous"
   />
-  <link rel="stylesheet" href="/static/css/demo.css?v=rp-v26" />
-  <link rel="stylesheet" href="/static/css/character1.css?v=rp-v6" />
-  <link rel="stylesheet" href="/static/css/character2.css?v=rp-v6" />
-  <link rel="stylesheet" href="/static/css/character3.css?v=rp-v6" />
+  <script>
+    (function () {
+      var t = Date.now();
+      var base = "/static/css/demo/";
+      var chunks = [
+        "tokens.css",
+        "global-typography.css",
+        "metrics-and-bd-bars.css",
+        "guide-chat-llm-scroll.css",
+        "layout-viz-chart.css",
+        "viz-llm-sync.css",
+        "trail-and-banners.css",
+        "layout-stacks-and-cards.css",
+        "breakdown-guide-agent-chat.css",
+        "decision-outcome-modal.css",
+        "responsive-layout.css",
+        "viewport-lg.css",
+      ];
+      for (var i = 0; i < chunks.length; i++) {
+        document.write(
+          '<link rel="stylesheet" href="' +
+            base +
+            chunks[i] +
+            "?t=" +
+            t +
+            '">'
+        );
+      }
+      document.write(
+        '<link rel="stylesheet" href="/static/css/character1.css?t=' + t + '">'
+      );
+      document.write(
+        '<link rel="stylesheet" href="/static/css/character2.css?t=' + t + '">'
+      );
+      document.write(
+        '<link rel="stylesheet" href="/static/css/character3.css?t=' + t + '">'
+      );
+    })();
+  </script>
 </head>
 <body class="demo-body bg-light">
   <div class="app-layout d-flex flex-column min-vh-100">
@@ -54,22 +89,22 @@
     <main class="container-fluid flex-grow-1 d-flex flex-column min-vh-0 px-2 py-2 app-main">
       <div class="row g-2 g-lg-3 flex-grow-1 min-h-0">
         <!-- 左: 主要指標・内訳 -->
-        <section class="col-12 col-lg-3 d-flex flex-column min-h-0 col-env" aria-label="主要指標と客観リスク内訳">
+        <section class="col-12 col-lg-3 d-flex flex-column min-h-0 col-env" aria-label="主要指標、状態フラグ、客観リスク内訳">
           <div class="side-stack side-stack--left d-flex flex-column gap-2 flex-grow-1 min-h-0 overflow-auto">
             <div class="metrics-block flex-shrink-0">
               <h2 class="col-section-title small fw-bold text-body mb-2">主要指標</h2>
               <div class="row row-cols-2 g-2" id="metrics-root"></div>
             </div>
-            <div class="card breakdown-card shadow-sm border flex-shrink-1 min-h-0 d-flex flex-column">
+            <div
+              class="card risk-flags-card shadow-sm border flex-shrink-0 d-flex flex-column"
+              aria-label="状態フラグ"
+            >
+              <h3 class="card-header py-2 px-3 small fw-bold mb-0 border-bottom flex-shrink-0">状態フラグ</h3>
+              <div class="card-body py-2 px-3 flex-shrink-0" id="risk-flags-strip" role="region"></div>
+            </div>
+            <div class="card breakdown-card shadow-sm border flex-shrink-0 d-flex flex-column">
               <h3 class="card-header py-2 px-3 small fw-bold mb-0 border-bottom flex-shrink-0">客観リスク内訳</h3>
-              <div
-                class="breakdown-summary-wrap flex-shrink-0 px-3 pb-2 border-bottom bg-white"
-                id="breakdown-summary"
-              ></div>
-              <div
-                class="breakdown-detail card-body py-2 px-2 flex-grow-1 min-h-0"
-                id="breakdown-detail"
-              ></div>
+              <div class="breakdown-detail card-body py-2 px-3" id="breakdown-detail"></div>
             </div>
           </div>
         </section>
@@ -217,6 +252,9 @@
     src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"
     crossorigin="anonymous"
   ></script>
-  <script type="module" src="/static/js/demo/app.js?v=rp-v16"></script>
+  <script type="module">
+    const t = Date.now();
+    await import(`/static/js/demo/entry.js?t=${t}`);
+  </script>
 </body>
 </html>

@@ -1,5 +1,8 @@
-import { COLORS } from "./constants.js";
-import { $, num01 } from "./util.js";
+import { siblingImportQuery } from "./asset-query.js";
+
+const q = siblingImportQuery(import.meta.url);
+const { COLORS } = await import(`./constants.js${q}`);
+const { $, num01 } = await import(`./util.js${q}`);
 
 /** X 軸は常にこの本数（横幅の目安）。max_steps が大きいときは stepsPerBin を増やして収める */
 const SLOT_COUNT = 30;

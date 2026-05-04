@@ -33,6 +33,8 @@ flowchart LR
 
 ## 3. 終了時の分岐（意思決定とアウトカム）
 
+**拡張要件（vNext：多段判断・確率的帰結・チャット LLM 化・フラグ UI）は [rp_ui_and_simulation_vnext.md](rp_ui_and_simulation_vnext.md) を参照。**
+
 上限ステップに達すると「続行」か「LLM 介入 → 中止」が選べる。終了後の `rp_zone` は **`outcome`** によって決まる。
 
 ```mermaid

@@ -1,5 +1,8 @@
-import { $ } from "./util.js";
-import { LLM_PLACEHOLDER } from "./constants.js";
+import { siblingImportQuery } from "./asset-query.js";
+
+const q = siblingImportQuery(import.meta.url);
+const { $ } = await import(`./util.js${q}`);
+const { LLM_PLACEHOLDER } = await import(`./constants.js${q}`);
 
 export function setLlmContent(text) {
   const el = $("llm-text");

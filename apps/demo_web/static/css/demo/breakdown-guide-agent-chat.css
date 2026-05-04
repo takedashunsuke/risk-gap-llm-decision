@@ -1,83 +1,74 @@
-/* 客観リスク内訳カード */
-.breakdown-card {
-  flex: 1 1 auto;
-  min-height: 0;
-  min-width: 0;
-  max-width: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.breakdown-card .card-header h3 {
-  margin: 0;
-  flex-shrink: 0;
-}
-
+/* 客観リスク内訳：字色・最終行の区切り線のみ（枠は Bootstrap .card 任せ） */
 .breakdown-card .breakdown-detail {
   font-size: 0.8125rem;
   color: var(--muted);
   line-height: 1.4;
-  flex: 1 1 auto;
-  min-height: 0;
-  min-width: 0;
-  max-height: none;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
 }
 
-/* 内訳詳細：タブ（スクロールなし・タブで切替） */
-.breakdown-tabs {
-  min-height: 0;
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
+.breakdown-card .card-header h3 {
+  margin: 0;
 }
 
-.breakdown-detail-nav {
-  flex-shrink: 0;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  overflow-y: hidden;
-  gap: 0;
-  border-bottom-color: var(--border);
-}
-
-.breakdown-detail-nav .nav-link {
-  padding: 0.28rem 0.4rem;
-  font-size: 0.7rem;
-  font-weight: 600;
-  white-space: nowrap;
-  color: var(--muted);
-}
-
-.breakdown-detail-nav .nav-link.active {
-  color: var(--text);
-}
-
-.breakdown-detail-panels {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.breakdown-detail-panels .tab-pane {
-  min-height: 0;
-}
-
-.breakdown-detail-panels .tab-pane.active {
-  display: flex;
-  flex-direction: column;
-}
-
-.breakdown-detail-panels .tab-pane .breakdown-rows {
-  flex: 0 0 auto;
+/* 表示中タブの最下行とカード下枠が二重に見えないよう */
+.breakdown-tabs .tab-pane .bd-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0.1rem;
 }
 
 .breakdown-card .breakdown-summary-wrap {
   font-size: 0.8125rem;
   line-height: 1.4;
   padding-top: 0.55rem;
+}
+
+/* 状態フラグ：主要指標の下・客観リスク内訳の上の独立カード */
+.risk-flags-card {
+  flex-shrink: 0;
+}
+
+.risk-flags-card .card-body {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.risk-flags-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.risk-flag-row--formula .risk-flag-row__k {
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.risk-flag-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.risk-flag-row__k {
+  flex: 1;
+  min-width: 0;
+  color: var(--text);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.pill--flag-continue {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.38);
+  color: #1d4ed8;
+}
+
+.pill--flag-gap {
+  background: rgba(245, 158, 11, 0.14);
+  border: 1px solid rgba(217, 119, 6, 0.45);
+  color: #b45309;
 }
 
 .breakdown-rows {

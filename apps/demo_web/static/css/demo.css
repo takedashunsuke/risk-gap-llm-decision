@@ -1,6 +1,7 @@
 /**
- * Risk Gap LLM Decision — デモ UI エントリ
- * 分割ファイルを @import（順序はカスケードのため元の demo.css と同等）
+ * デモ用スタイルは index.html 内のスクリプトで
+ * /static/css/demo/*.css 各ファイルに ?t=Date.now() を付けて読み込みます（手動版付与不要）。
+ * 直接本ファイルだけ link する用途があれば、下記 @import の順序を index と揃えてください。
  */
 @import url("demo/tokens.css");
 @import url("demo/global-typography.css");
