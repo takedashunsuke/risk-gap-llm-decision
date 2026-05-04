@@ -10,3 +10,4 @@
 | `2026-05-03-demo-web-ui-and-rp-narrative.md` | demo_web の Bootstrap UI・パーティ登山・`rp_zone`・結果モーダル・スクロール／トレイル枠の安定化（2026-05 前後） |
 | `2026-05-03-demo-guide-persona-party-chat.md` | デモガイドページ集約・引率人格プリセットと Ollama トグル API・パーティ三人チャット・レイアウト微修正（2026-05 前後） |
 | `2026-05-03-demo-metrics-heat-breakdown-bars.md` | 主要指標カードの黄／赤段階表示・リスク内訳の 0〜1 バーと凡例・demo-guide 追記（2026-05 前後） |
+| `2026-05-04-phase-b-judgment-events-and-guide-restructure.md` | フェーズB判断イベント化（フラグ切替トリガ・中止即終了・Gap閾値可変）と `static/guide` 集約、式見直し（2026-05-04） |

@@ -79,6 +79,10 @@
               <td><code>late_gap_danger</code></td>
               <td>計画の約 85% 以降で Gap 要注意が立ったとき、<strong>一度だけ</strong>判断を促す。改善で解除。</td>
             </tr>
+            <tr>
+              <td><code>flag_continue_toggled</code> / <code>flag_gap_toggled</code></td>
+              <td>続行ルールまたは Gap フラグが切り替わったとき。手動・自動再生とも停止して判断待ち。</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -90,10 +94,10 @@
     <section class="demo-guide-section" id="sim-outcome">
       <h2 class="h6 fw-semibold border-bottom pb-2 mb-3">判断後の終了（既定モード）</h2>
       <p class="small mb-2">
-        <code>legacy_decision == false</code>（既定）では、判断直後に必ず終了するとは限りません。計画超過後の <code>advance</code> で帰結が決まります。
+        <code>legacy_decision == false</code>（既定）では、<strong>続行</strong>は終了せずに継続し、Gap 要注意しきい値を 0.3 に緩和します。<strong>中止</strong>はその場で <code>avoided</code> として終了します。
       </p>
       <p class="small text-muted mb-0">
-        <code>legacy_decision == true</code> は従来の「判断ですぐエンディング」。デモのリセット API では切り替えず、コードで <code>new_simulator(..., legacy_decision=True)</code> が必要です。
+        中止時は客観リスクの人テーマ平均に相当する <code>fatigue</code> / <code>attention_loss</code> を各 0.1 下げます。LLM は判断そのものではなく、チャットと中止時メッセージのサポート用途です。
       </p>
     </section>
 

@@ -32,7 +32,7 @@
         <strong>R_obj</strong>（客観リスク）と<strong>R_subj</strong>（主観リスク）のずれ・<strong>Gap</strong> を、左の主要指標・<strong>客観リスク内訳</strong>と中央のグラフ・パーティ登山で確認できます。ヘッダー文言どおり、客観は<strong>外部環境</strong>の数値、主観は<strong>パーティ・引率（人的エージェント）</strong>のニュアンスと対応づけて読めます。
       </p>
       <p class="small mb-2">
-        ステップ進行で場所の背景が変わります。中央カラムの「最終判断」は、<strong>計画ステップ到達時</strong>に加え、<strong>遅い局面で Gap が要注意になった場合</strong>などに選べることがあります（理由コードは API の <code class="small">judgment_trigger_reason</code> 等。詳細は<a href="simulator.html">シミュレーターパターン</a>）。
+        ステップ進行で場所の背景が変わります。中央カラムは「最終判断」ではなく<strong>判断イベント</strong>として、計画ステップ到達や状態フラグの切替時にモーダルで選択を促します（理由コードは API の <code class="small">judgment_trigger_reason</code>。詳細は<a href="simulator.html">シミュレーターパターン</a>）。
       </p>
       <p class="small mb-2">
         判断後もシミュレーションが即終了しない場合があり、<strong>絶対上限（最大 70 ステップ）</strong>まで進行できます。エンディングと地名の対応は <code class="small">docs/design/rp_simulation.md</code> を参照してください。

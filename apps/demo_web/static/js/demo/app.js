@@ -35,6 +35,48 @@ let autoplayTimer = null;
 let lastRenderedStep = null;
 /** 結果モーダルを二重に出さないためのキー（outcome + step） */
 let lastOutcomeModalKey = null;
+/** 判断モーダルを同じトリガで連打しないためのキー */
+let lastDecisionPromptKey = null;
+
+function decisionReasonLabel(reason) {
+  switch (reason) {
+    case "max_steps":
+      return "計画ステップに到達しました。次の方針を選択してください。";
+    case "late_gap_danger":
+      return "遅い局面で Gap が要注意域に入りました。次の方針を選択してください。";
+    case "flag_continue_toggled":
+      return "続行ルールが切り替わりました。次の方針を選択してください。";
+    case "flag_gap_toggled":
+      return "Gap フラグが切り替わりました。次の方針を選択してください。";
+    case "flag_both_toggled":
+      return "続行ルールと Gap フラグが同時に切り替わりました。次の方針を選択してください。";
+    default:
+      return "状態が変化したため、次の方針を選択してください。";
+  }
+}
+
+function getDecisionModal() {
+  const root = $("decisionModal");
+  if (!root || typeof bootstrap === "undefined" || !bootstrap.Modal) return null;
+  return bootstrap.Modal.getOrCreateInstance(root);
+}
+
+async function submitDecision(choice) {
+  stopAutoplay();
+  const data = await api("/api/decide", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ choice }),
+  });
+  render(data);
+  if (data.llm_message) {
+    setLlmContent(data.llm_message);
+  } else if (choice === "stop") {
+    setLlmContent(
+      "Ollama からの応答がありませんでした。数値と分岐はそのまま有効です。"
+    );
+  }
+}
 
 function render(data) {
   const prevStep = lastRenderedStep;
@@ -171,8 +213,18 @@ function render(data) {
   const canDecide = !!data.can_decide && data.phase === "running";
   const canAdvance = !!data.can_advance && data.phase === "running";
   $("btn-advance").disabled = !canAdvance;
-  $("btn-continue").disabled = !canDecide;
-  $("btn-llm").disabled = !canDecide;
+  $("btn-open-decision").disabled = !canDecide;
+  const reason = data.judgment_trigger_reason;
+  const hint = $("decision-hint");
+  if (hint) {
+    hint.textContent = canDecide
+      ? decisionReasonLabel(reason)
+      : "※状態フラグが切り替わると判断を促します。";
+  }
+  const reasonNode = $("decision-modal-reason");
+  if (reasonNode) {
+    reasonNode.textContent = decisionReasonLabel(reason);
+  }
 
   const endKey =
     data.phase === "ended" && data.outcome
@@ -190,6 +242,16 @@ function render(data) {
     data.phase === "ended" ? "none" : "flex";
   $("decision-hint").style.display =
     data.phase === "ended" ? "none" : "block";
+  if (canDecide) {
+    const promptKey = `${data.step}:${reason || "unknown"}`;
+    if (promptKey !== lastDecisionPromptKey) {
+      lastDecisionPromptKey = promptKey;
+      const m = getDecisionModal();
+      if (m) m.show();
+    }
+  } else if (!canAdvance) {
+    lastDecisionPromptKey = null;
+  }
 
   const series = data.chart_series || [];
   drawChart(series, data.max_steps || 40);
@@ -301,31 +363,21 @@ function bind() {
 
   $("btn-autoplay").addEventListener("click", () => toggleAutoplay());
 
-  $("btn-continue").addEventListener("click", async () => {
-    stopAutoplay();
-    const data = await api("/api/decide", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ choice: "continue" }),
-    });
-    render(data);
+  $("btn-open-decision").addEventListener("click", () => {
+    const m = getDecisionModal();
+    if (m) m.show();
   });
 
-  $("btn-llm").addEventListener("click", async () => {
-    stopAutoplay();
-    const data = await api("/api/decide", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ choice: "llm_stop" }),
-    });
-    render(data);
-    if (data.llm_message) {
-      setLlmContent(data.llm_message);
-    } else {
-      setLlmContent(
-        "Ollama からの応答がありませんでした。数値と分岐はそのまま有効です。"
-      );
-    }
+  $("btn-modal-continue").addEventListener("click", async () => {
+    const m = getDecisionModal();
+    if (m) m.hide();
+    await submitDecision("continue");
+  });
+
+  $("btn-modal-stop").addEventListener("click", async () => {
+    const m = getDecisionModal();
+    if (m) m.hide();
+    await submitDecision("stop");
   });
 
   window.addEventListener("resize", () => {

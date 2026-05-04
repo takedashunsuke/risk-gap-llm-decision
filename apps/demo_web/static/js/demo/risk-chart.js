@@ -7,6 +7,9 @@ const { $, num01 } = await import(`./util.js${q}`);
 /** X 軸は常にこの本数（横幅の目安）。max_steps が大きいときは stepsPerBin を増やして収める */
 const SLOT_COUNT = 30;
 
+/** `risk_simulator.MAX_STEPS`（最大ステップ番号）+ 1 … chart は step を step &lt; domainExclusive で含める */
+const CHART_STEP_EXCLUSIVE_MAX = 71;
+
 /** #chart-wrap ライトグレー向けの軸・グリッド色 */
 const CHART_AXIS = {
   tick: "#475569",
@@ -313,8 +316,13 @@ export function drawChart(series, maxStepsArg) {
   const ChartCtor = typeof Chart !== "undefined" ? Chart : null;
   if (!canvas || !ChartCtor) return;
 
-  const maxSteps = Math.max(1, parseInt(maxStepsArg, 10) || 40);
-  const pack = computeSlotData(series, maxSteps);
+  /**
+   * フェーズBでは step が計画 max_steps を超えるため、描画ドメインは固定上限で運用する。
+   * これで毎ステップの maxSteps 変化による destroy/rebuild を避け、差分 update のみになる。
+   */
+  const planExclusive = Math.max(1, parseInt(maxStepsArg, 10) || 40);
+  const domainExclusive = Math.max(planExclusive, CHART_STEP_EXCLUSIVE_MAX);
+  const pack = computeSlotData(series, domainExclusive);
 
   if (chartNeedsRebuild(pack)) {
     if (riskChart) {

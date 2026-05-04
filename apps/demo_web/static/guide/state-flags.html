@@ -51,10 +51,10 @@
               </td>
             </tr>
             <tr>
-              <td>Gap ≥ 0.2（要注意）</td>
+              <td>Gap ≥ threshold（要注意）</td>
               <td><code>gap_danger</code></td>
               <td>
-                ギャップが 0.2 以上として「要注意」とみなす。<strong>主要指標の Gap カード強調</strong>とも連動します。
+                ギャップが <code>gap_danger_threshold</code> 以上として「要注意」とみなす。既定は 0.2、続行（過信）選択後は 0.3 まで緩和。<strong>主要指標の Gap カード強調</strong>とも連動します。
               </td>
             </tr>
           </tbody>
@@ -62,7 +62,7 @@
       </div>
 
       <p class="small text-muted mb-0">
-        シミュレーションがいつ「最終判断」を促すかの詳細は <a href="simulator.html">7）シミュレーターパターン</a>、地名・エンディングは <code class="small">docs/design/rp_simulation.md</code> を参照してください。
+        シミュレーションがいつ「判断イベント」を促すかの詳細は <a href="simulator.html">7）シミュレーターパターン</a>、地名・エンディングは <code class="small">docs/design/rp_simulation.md</code> を参照してください。
       </p>
     </section>
 

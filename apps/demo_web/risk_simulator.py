@@ -22,6 +22,9 @@ def _clamp01(x: float) -> float:
 JUDGMENT_MAX_STEPS = "max_steps"
 # 計画ステップ手前の遅い局面で Gap が危険域に入ったときの一回限り提示（advance 内でセット）
 JUDGMENT_LATE_GAP_DANGER = "late_gap_danger"
+JUDGMENT_FLAG_CONTINUE_TOGGLED = "flag_continue_toggled"
+JUDGMENT_FLAG_GAP_TOGGLED = "flag_gap_toggled"
+JUDGMENT_FLAG_BOTH_TOGGLED = "flag_both_toggled"
 
 
 @dataclass
@@ -50,6 +53,8 @@ class RiskSimulator:
     bias: float = 0.12
     # 中止コスト（引き返し困難さ）
     cost_stop: float = 0.18
+    # Gap 要注意判定のしきい値（続行判断後に緩和する）
+    gap_danger_threshold: float = 0.2
 
     step: int = 0
     max_steps: int = 40
@@ -68,6 +73,8 @@ class RiskSimulator:
     judgment_events: List[Dict[str, Any]] = field(default_factory=list)
     # max_steps 未到達でも判断 UI を出す場合の理由（1回提示したらクリア）
     judgment_prompt_reason: Optional[str] = None
+    # max_steps 到達時の判断は既定モードでは 1 回だけ要求する
+    max_steps_decision_done: bool = False
     # 引率エージェント／中止コーチなど UI 用チャット（デモの表示のみ）
     guide_chat: List[Dict[str, Any]] = field(default_factory=list)
 
@@ -100,9 +107,9 @@ class RiskSimulator:
         r_obj = _clamp01(r_obj)
         r_subj = _clamp01(r_obj - self.bias)
         gap = r_obj - r_subj
-        # 設計書 4.5: 続行 if (R_subj - Cost_stop) < T … の場合は「中止」側
-        continue_if = (r_subj - self.cost_stop) < self.T
-        gap_danger = gap >= 0.2
+        # 続行ルール: (R_subj + Cost_stop) < T
+        continue_if = (r_subj + self.cost_stop) < self.T
+        gap_danger = gap >= self.gap_danger_threshold
         return {
             "R_obj": round(r_obj, 4),
             "R_subj": round(r_subj, 4),
@@ -112,6 +119,7 @@ class RiskSimulator:
             "bias": round(self.bias, 4),
             "continue_rule_holds": continue_if,
             "gap_danger": gap_danger,
+            "gap_danger_threshold": round(self.gap_danger_threshold, 4),
             "breakdown": {
                 "environment_avg": round(env_avg, 4),
                 "human_avg": round(human_avg, 4),
@@ -176,9 +184,30 @@ class RiskSimulator:
         """判断ボタンを出すべきなら理由コードを返す。優先: 計画上限 > 遅い局面の Gap。"""
         if self.phase != "running":
             return None
-        if self.step >= self.max_steps:
+        if self.step >= self.max_steps and not self.max_steps_decision_done:
             return JUDGMENT_MAX_STEPS
         return self.judgment_prompt_reason
+
+    def _maybe_set_flag_toggle_prompt(
+        self, prev_m: Dict[str, Any], now_m: Dict[str, Any]
+    ) -> None:
+        """続行ルール/GAP の真偽が切り替わったら判断待ちにする。"""
+        if self.legacy_decision:
+            return
+        if self.judgment_prompt_reason is not None:
+            return
+        prev_continue = bool(prev_m.get("continue_rule_holds"))
+        prev_gap = bool(prev_m.get("gap_danger"))
+        now_continue = bool(now_m.get("continue_rule_holds"))
+        now_gap = bool(now_m.get("gap_danger"))
+        continue_changed = prev_continue != now_continue
+        gap_changed = prev_gap != now_gap
+        if continue_changed and gap_changed:
+            self.judgment_prompt_reason = JUDGMENT_FLAG_BOTH_TOGGLED
+        elif continue_changed:
+            self.judgment_prompt_reason = JUDGMENT_FLAG_CONTINUE_TOGGLED
+        elif gap_changed:
+            self.judgment_prompt_reason = JUDGMENT_FLAG_GAP_TOGGLED
 
     def _maybe_set_late_gap_prompt(self, m: Dict[str, Any]) -> None:
         """上限手前で Gap が危険なら、一回だけ判断提示フラグを立てる。"""
@@ -209,6 +238,8 @@ class RiskSimulator:
             return False
         if self.legacy_decision:
             return self.step < self.max_steps
+        if self._judgment_trigger_reason() is not None:
+            return False
         return self.step < MAX_STEPS
 
     def _append_judgment_event(
@@ -258,6 +289,7 @@ class RiskSimulator:
         if not self.can_advance():
             return self.snapshot()
 
+        prev_m = self.metrics()
         s = self._scale()
         self.step += 1
         if step_kind is not None:
@@ -290,6 +322,7 @@ class RiskSimulator:
             self.cost_stop = _clamp01(self.cost_stop + 0.045 * s)
 
         m = self.metrics()
+        self._maybe_set_flag_toggle_prompt(prev_m, m)
         self._maybe_set_late_gap_prompt(m)
         self._sync_late_gap_prompt(m)
         self.history.append({"step": self.step, "event": "rest" if is_rest else "trek", **m})
@@ -303,18 +336,6 @@ class RiskSimulator:
         self._resolve_post_decision_outcome()
         return self.snapshot()
 
-    @staticmethod
-    def _continue_branch_accident_probability(m: Dict[str, Any]) -> float:
-        """continue 判断後のステップで用いる事故確率（0..1）。"""
-        r_obj = float(m.get("R_obj") or 0.0)
-        gap = float(m.get("Gap") or 0.0)
-        accident_prob = 0.18
-        if r_obj >= 0.42:
-            accident_prob += min(0.24, (r_obj - 0.42) * 2.0)
-        if gap >= 0.2:
-            accident_prob += min(0.2, (gap - 0.2) * 2.0)
-        return _clamp01(accident_prob)
-
     def _resolve_post_decision_outcome(self) -> None:
         if self.phase != "running" or self.legacy_decision:
             return
@@ -322,14 +343,23 @@ class RiskSimulator:
             return
         if self.last_decision == "continue":
             m = self.metrics()
-            accident_prob = self._continue_branch_accident_probability(m)
-            if self._rng.random() < accident_prob:
+            gap = float(m.get("Gap") or 0.0)
+            r_obj = float(m.get("R_obj") or 0.0)
+            continue_holds = bool(m.get("continue_rule_holds"))
+            th = float(self.gap_danger_threshold)
+            # 続行直後の早すぎる終了を避けるため短い猶予を設ける
+            if self.step < min(MAX_STEPS, self.max_steps + 3):
+                return
+            # Gap が広がる、または続行ルールが崩れるまでは基本継続
+            if continue_holds and gap < (th + 0.1) and r_obj < 0.58:
+                return
+            if (not continue_holds and gap >= (th + 0.1)) or gap >= (th + 0.2) or r_obj >= 0.62:
                 self.phase = "ended"
                 self.outcome = "accident"
                 return
-            if self.step >= min(MAX_STEPS, self.max_steps + 6):
+            if self.step >= MAX_STEPS:
                 self.phase = "ended"
-                self.outcome = "cleared"
+                self.outcome = "cleared" if continue_holds else "accident"
                 return
         elif self.last_decision == "llm_stop":
             if self.step >= min(MAX_STEPS, self.max_steps + 2):
@@ -344,6 +374,10 @@ class RiskSimulator:
         self._append_judgment_event(reason_code=trig, choice="continue")
         self.last_decision = "continue"
         self.judgment_prompt_reason = None
+        # 続行（過信）するたびに Gap 判定しきい値を +0.1 緩和
+        self.gap_danger_threshold = _clamp01(self.gap_danger_threshold + 0.1)
+        if trig == JUDGMENT_MAX_STEPS:
+            self.max_steps_decision_done = True
         if self.legacy_decision:
             m = self.metrics()
             self.phase = "ended"
@@ -354,16 +388,20 @@ class RiskSimulator:
         return self.snapshot()
 
     def decide_llm_stop(self) -> Dict[str, Any]:
-        """分岐②：LLM 介入により中止 → 回避。"""
+        """分岐②：中止。ここでエンディングし、人テーマ平均を下げる。"""
         trig = self._judgment_trigger_reason()
         if self.phase != "running" or trig is None:
             return self.snapshot()
         self._append_judgment_event(reason_code=trig, choice="llm_stop")
         self.last_decision = "llm_stop"
         self.judgment_prompt_reason = None
-        if self.legacy_decision:
-            self.phase = "ended"
-            self.outcome = "avoided"
+        if trig == JUDGMENT_MAX_STEPS:
+            self.max_steps_decision_done = True
+        # 方針変更: 中止は即終了。客観リスク（人テーマ平均）を 0.1 下げる。
+        self.fatigue = _clamp01(self.fatigue - 0.1)
+        self.attention_loss = _clamp01(self.attention_loss - 0.1)
+        self.phase = "ended"
+        self.outcome = "avoided"
         return self.snapshot()
 
 

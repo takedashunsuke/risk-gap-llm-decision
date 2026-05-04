@@ -81,16 +81,30 @@ function breakdownBarRow(labelHtml, val) {
 export function renderRiskFlags(m) {
   const c1 = !!m.continue_rule_holds;
   const c2 = !!m.gap_danger;
+  const gapTh =
+    typeof m.gap_danger_threshold === "number" ? m.gap_danger_threshold : 0.2;
+  const rSubj = num01(m.R_subj);
+  const costStop = num01(m.Cost_stop);
+  const tVal = num01(m.T);
+  const gapVal = num01(m.Gap);
+  const lhs = rSubj != null && costStop != null ? rSubj + costStop : null;
   const p1 = c1 ? "pill pill--flag-continue" : "pill pill--off";
   const p2 = c2 ? "pill pill--flag-gap" : "pill pill--off";
+  const fmt2 = (v) => (typeof v === "number" ? v.toFixed(2) : "—");
   return (
     `<div class="risk-flags-body">` +
     `<div class="risk-flag-row risk-flag-row--formula">` +
-    `<span class="risk-flag-row__k">続行ルール（(Rsubj − Coststop) &lt; T）成立</span>` +
+    `<span class="risk-flag-row__k">続行ルール（(Rsubj + Coststop) &lt; T）成立<br><small class="text-muted">(${fmt2(
+      rSubj
+    )} + ${fmt2(costStop)}) = ${fmt2(lhs)} / T = ${fmt2(tVal)}</small></span>` +
     `<span class="${p1}">${c1 ? "はい" : "いいえ"}</span>` +
     `</div>` +
     `<div class="risk-flag-row">` +
-    `<span class="risk-flag-row__k">Gap(Rsubj - Robj) ≥ 0.2</span>` +
+    `<span class="risk-flag-row__k">Gap(Robj - Rsubj) ≥ ${gapTh.toFixed(
+      1
+    )}<br><small class="text-muted">Gap = ${fmt2(gapVal)} / threshold = ${gapTh.toFixed(
+      2
+    )}</small></span>` +
     `<span class="${p2}">${c2 ? "はい" : "いいえ"}</span>` +
     `</div>` +
     `</div>`

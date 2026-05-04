@@ -135,7 +135,7 @@ _sim: RiskSimulator = new_simulator(max_steps=40, **_persona_sim_kw(_selected_gu
 
 
 class DecideBody(BaseModel):
-    choice: str  # "continue" | "llm_stop"
+    choice: str  # "continue" | "stop" (互換: "llm_stop")
 
 
 class ResetBody(BaseModel):
@@ -419,7 +419,7 @@ def decide(body: DecideBody) -> Dict[str, Any]:
     text: Optional[str] = None
     if body.choice == "continue":
         snap = _sim.decide_continue()
-    elif body.choice == "llm_stop":
+    elif body.choice in ("stop", "llm_stop"):
         snap = _sim.decide_llm_stop()
         if snap.get("outcome") == "avoided":
             m = snap.get("metrics") or {}
@@ -443,7 +443,7 @@ def decide(body: DecideBody) -> Dict[str, Any]:
             )
             snap = _sim.snapshot()
     else:
-        raise HTTPException(status_code=400, detail="choice must be continue or llm_stop")
+        raise HTTPException(status_code=400, detail="choice must be continue or stop")
 
     snap["llm_message"] = text
     return _enrich(snap)

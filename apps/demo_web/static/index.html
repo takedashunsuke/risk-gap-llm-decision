@@ -110,7 +110,7 @@
         </section>
 
         <!-- 中央: グラフ・登山・操作 -->
-        <section class="col-12 col-lg-5 d-flex flex-column min-h-0 col-center" aria-label="リスク推移・登山の可視化・最終判断">
+        <section class="col-12 col-lg-5 d-flex flex-column min-h-0 col-center" aria-label="リスク推移・登山の可視化・判断イベント">
           <div class="center-stack d-flex flex-column gap-2 flex-grow-1 min-h-0 overflow-auto">
             <div class="toolbar d-flex flex-wrap align-items-center gap-2 flex-shrink-0">
               <label class="small text-muted mb-0 d-flex align-items-center gap-1">
@@ -178,12 +178,11 @@
             <div class="card decision-card shadow-sm border flex-shrink-0">
               <div class="card-body py-2 px-3">
                 <h3 class="h6 mb-2 fw-semibold text-body d-flex align-items-baseline flex-nowrap gap-2 min-w-0">
-                  <span class="flex-shrink-0">最終判断</span>
-                  <span class="decision-hint text-muted fw-normal mb-0 text-truncate min-w-0" id="decision-hint">※上限ステップまで進むと分岐できます。</span>
+                  <span class="flex-shrink-0">判断イベント</span>
+                  <span class="decision-hint text-muted fw-normal mb-0 text-truncate min-w-0" id="decision-hint">※状態フラグが切り替わると判断を促します。</span>
                 </h3>
                 <div class="d-flex flex-wrap gap-2" id="decision-row">
-                  <button type="button" class="btn btn-sm btn-danger" id="btn-continue" disabled>続行（過信）</button>
-                  <button type="button" class="btn btn-sm btn-success" id="btn-llm" disabled>LLM 介入 → 中止</button>
+                  <button type="button" class="btn btn-sm btn-primary" id="btn-open-decision" disabled>判断を開く</button>
                 </div>
               </div>
             </div>
@@ -210,7 +209,7 @@
             </div>
             <div id="llm-wrap" class="llm-panel card border shadow-sm flex-shrink-0">
               <div class="card-header py-2 px-3 border-bottom">
-                <h3 class="h6 mb-0 fw-semibold">LLM メッセージ（中止時）</h3>
+                <h3 class="h6 mb-0 fw-semibold">LLM サポートメッセージ</h3>
               </div>
               <div class="llm-panel-scroll">
                 <pre class="llm mb-0" id="llm-text"></pre>
@@ -220,6 +219,31 @@
         </section>
       </div>
     </main>
+  </div>
+
+  <div
+    class="modal fade"
+    id="decisionModal"
+    tabindex="-1"
+    aria-labelledby="decisionModalTitle"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header py-2">
+          <h2 class="modal-title h6 mb-0" id="decisionModalTitle">判断が必要です</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
+        </div>
+        <div class="modal-body small text-body">
+          <p class="mb-2" id="decision-modal-reason">状態が変化したため、次の方針を選択してください。</p>
+          <p class="text-muted mb-0">中止を選ぶとそこで終了し、人テーマ平均が 0.1 低下します。</p>
+        </div>
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-sm btn-danger" id="btn-modal-continue">続行（過信）</button>
+          <button type="button" class="btn btn-sm btn-success" id="btn-modal-stop">中止</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div
