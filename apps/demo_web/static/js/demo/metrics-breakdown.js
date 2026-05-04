@@ -90,7 +90,7 @@ export function renderRiskFlags(m) {
     `<span class="${p1}">${c1 ? "はい" : "いいえ"}</span>` +
     `</div>` +
     `<div class="risk-flag-row">` +
-    `<span class="risk-flag-row__k">Gap ≥ 0.2</span>` +
+    `<span class="risk-flag-row__k">Gap(Rsubj - Robj) ≥ 0.2</span>` +
     `<span class="${p2}">${c2 ? "はい" : "いいえ"}</span>` +
     `</div>` +
     `</div>`
