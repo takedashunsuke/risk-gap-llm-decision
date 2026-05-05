@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import os
+import random
 import re
 from datetime import datetime, timezone
 from pathlib import Path
@@ -294,44 +295,221 @@ PARTY_LEADER_LABEL = "引率・朔"
 PARTY_MEMBER_A_LABEL = "隊員・遥"
 PARTY_MEMBER_B_LABEL = "隊員・楓"
 
+CHAT_STYLE_PRESETS: Dict[str, Dict[str, Any]] = {
+    # 口調と重複回避の強さ（low/medium/high）
+    "safety_first": {"tone": "落ち着いた安全優先の口調", "anti_repeat": "high"},
+    "pace_push": {"tone": "手短でテンポ重視の口調", "anti_repeat": "medium"},
+    "optimist": {"tone": "前向きだが軽すぎない口調", "anti_repeat": "high"},
+    "weather_watch": {"tone": "観測事実を丁寧に共有する口調", "anti_repeat": "high"},
+}
 
-def _leader_fallback_line(action: Literal["trek", "rest"]) -> str:
+
+def _chat_style_profile() -> Dict[str, Any]:
+    base = {"tone": "自然で簡潔な現場口調", "anti_repeat": "medium"}
+    row = CHAT_STYLE_PRESETS.get(_selected_guide_persona_id) or {}
+    out = dict(base)
+    for k in ("tone", "anti_repeat"):
+        if k in row:
+            out[k] = row[k]
+    return out
+
+
+def _recent_lines_for_repeat_guard(sim: RiskSimulator, anti_repeat: str) -> List[str]:
+    n = 8
+    if anti_repeat == "high":
+        n = 12
+    elif anti_repeat == "low":
+        n = 4
+    rows = sim.guide_chat[-n:]
+    out: List[str] = []
+    for row in rows:
+        ct = str(row.get("content") or "").strip()
+        if ct:
+            out.append(ct)
+    return out
+
+
+def _rng_for_chat(sim: RiskSimulator, action: Literal["trek", "rest"]) -> random.Random:
+    """同じ状態ならほぼ同じ会話を返すための軽い決定論乱数。"""
+    m = sim.metrics()
+    seed = (
+        sim.step * 1000
+        + sim.max_steps * 31
+        + int((m.get("R_obj") or 0) * 10000)
+        + int((m.get("Gap") or 0) * 10000) * 7
+        + (17 if action == "rest" else 29)
+    )
+    return random.Random(seed)
+
+
+def _leader_fallback_line(
+    sim: RiskSimulator,
+    action: Literal["trek", "rest"],
+    reasoning_hint: str = "",
+    tone_hint: str = "",
+) -> str:
+    m = sim.metrics()
+    gap_d = bool(m.get("gap_danger"))
+    ro = float(m.get("R_obj") or 0)
+    hum = m.get("human") or {}
+    envo = m.get("env") or {}
+    fatigue = float(hum.get("fatigue") or 0)
+    vis = float(envo.get("visibility") or 0)
+    rng = _rng_for_chat(sim, action)
+    if reasoning_hint.strip():
+        # LLM の判断理由をそのまま見せると「引率の即時判断感」が出る
+        return reasoning_hint.strip()
+    is_push = "テンポ重視" in tone_hint
+    is_fact = "観測事実" in tone_hint
     if action == "rest":
-        return "ここで一息つこう。荷物を下ろして水分と体温を整える。"
-    return "このまま進む。足元と間隔に注意して、報連相は省略しない。"
+        pool = [
+            "ここで一息入れよう。水分・体温・呼吸を整えてから再開する。",
+            "焦らず休憩を取る。肩と足をほぐして、次の区間に備えよう。",
+            "立ち止まる判断にする。隊形を整えて状況確認を先にやる。",
+        ]
+        if is_push:
+            pool = [
+                "ここで短く休む。整えたらすぐ再開しよう。",
+                "1回だけ止まる。呼吸と装備を整えて次へ行く。",
+                "休憩を挟む。確認を済ませたらテンポを戻す。",
+            ]
+        elif is_fact:
+            pool = [
+                "視界と疲労の数値を見て、ここで休憩に切り替える。",
+                "観測上、無理は得策じゃない。回復を優先しよう。",
+                "現状の変化量を踏まえて、いったん停止して整える。",
+            ]
+        if fatigue > 0.34 or vis < 0.28:
+            pool = [
+                "疲労と視界が気になる。短くても休憩を入れてから動こう。",
+                "無理に詰めない。いったん止まって足元と風を確認する。",
+                "今は回復優先。ここで整えないと次の判断が鈍る。",
+            ]
+        return pool[rng.randrange(len(pool))]
+    pool = [
+        "このまま進む。足場と間隔を守って、声かけは短く続ける。",
+        "進行を継続する。ペースは抑えめで、変化があればすぐ共有。",
+        "前進しよう。焦らず一定リズムで行く。異変があれば即停止。",
+    ]
+    if is_push:
+        pool = [
+            "進む。ピッチは維持しつつ、確認ポイントだけは外さない。",
+            "この区間は前進。短い合図でテンポを合わせていく。",
+            "進行継続。詰めすぎず、変化が出たらすぐ修正しよう。",
+        ]
+    elif is_fact:
+        pool = [
+            "現時点の条件なら前進可能。確認頻度を上げて進もう。",
+            "観測値を踏まえれば進行できる。隊列を保っていこう。",
+            "前進判断。視界と疲労の変化を都度確認しながら行く。",
+        ]
+    if gap_d or ro >= 0.4:
+        pool = [
+            "進むが慎重にいく。楽観は捨てて、変化が出たらすぐ止める。",
+            "前進判断。ただし警戒モードで、隊列と視界確認を優先する。",
+            "ここは進む。けれど無理はしない。危険サインが出たら即切り替える。",
+        ]
+    return pool[rng.randrange(len(pool))]
 
 
-def _party_member_lines(sim: RiskSimulator, action: Literal["trek", "rest"]) -> Tuple[str, str]:
-    """隊員ふたりの返答（現在メトリクスに応じて文言を少し変える）。"""
+def _party_member_lines(
+    sim: RiskSimulator, action: Literal["trek", "rest"], tone_hint: str = ""
+) -> Tuple[str, str]:
+    """隊員ふたりの返答（テンプレ固定を避け、状態に応じて複数候補から選ぶ）。"""
     m = sim.metrics()
     hum = m.get("human") or {}
     envo = m.get("env") or {}
     fatigue = float(hum.get("fatigue") or 0)
     vis = float(envo.get("visibility") or 0)
     gap_d = bool(m.get("gap_danger"))
+    rng = _rng_for_chat(sim, action)
+    is_push = "テンポ重視" in tone_hint
+    is_fact = "観測事実" in tone_hint
     if action == "rest":
-        line_a = "休めるなら助かる。肩がこってきてた。"
-        line_b = "了解。風向きも見とく。"
+        a_pool = [
+            "休めるなら助かる。肩がこってきてた。",
+            "いい判断だと思う。足が固まってきてた。",
+            "短くでも止まれるのはありがたい。呼吸が楽になる。",
+        ]
+        b_pool = [
+            "了解。風向きも見とく。",
+            "わかった。周囲の足場を先に確認しておく。",
+            "オーケー。視界の変化とルート目印を見ておくね。",
+        ]
         if fatigue > 0.38:
-            line_a = "正直キツかった…休憩ありがたい。"
+            a_pool = [
+                "正直キツかった…休憩ありがたい。",
+                "助かった、脚が攣りそうだった。",
+                "いったん止まれて本当に助かる。集中が切れかけてた。",
+            ]
         elif fatigue > 0.28:
-            line_a = "足が重い。ここで詰めなくて正解だと思う。"
-        return line_a, line_b
-    line_a = "進むなら荷重心は低めで。岩屑あるから。"
-    line_b = "視界、ちゃんと確認してからね。"
+            a_pool = [
+                "足が重い。ここで詰めなくて正解だと思う。",
+                "この休憩でだいぶ違う。次に備えられる。",
+                "ちょうど止まりたかった。判断が冴えるはず。",
+            ]
+        if is_push:
+            b_pool = [
+                "了解、装備だけ素早く見直しておく。",
+                "わかった。次に動きやすい形で整えるね。",
+                "オーケー、短時間で要点だけ確認する。",
+            ]
+        elif is_fact:
+            b_pool = [
+                "了解。風と視界の変化を記録しておく。",
+                "わかった、足場と目印の状態を確認する。",
+                "了解。観測した変化をすぐ共有するね。",
+            ]
+        return a_pool[rng.randrange(len(a_pool))], b_pool[rng.randrange(len(b_pool))]
+    a_pool = [
+        "進むなら荷重心は低めで。岩屑あるから。",
+        "前に出る。段差は一歩ずつ確認していく。",
+        "進行了解。足場優先でピッチは上げすぎない。",
+    ]
+    b_pool = [
+        "視界、ちゃんと確認してからね。",
+        "ガイドロープの間隔、狭めに取ろう。",
+        "前方だけじゃなく横風も見ながら行こう。",
+    ]
     if vis < 0.28:
-        line_b = "ガスってきてる？ピッチ長くしないほうがいいんじゃ。"
+        b_pool = [
+            "ガスってきてる？ピッチ長くしないほうがいいんじゃ。",
+            "視界が薄い。間隔を詰めて進もう。",
+            "遠くが見えない。確認回数を増やしたい。",
+        ]
     if gap_d:
-        line_a = "楽観ムード強くない？様子、ちゃんと見てる？"
-    return line_a, line_b
+        a_pool = [
+            "楽観ムード強くない？様子、ちゃんと見てる？",
+            "いける雰囲気だけで押すのは怖い。確認しながら行こう。",
+            "進むのは賛成だけど、危険サインは見落としたくない。",
+        ]
+    if is_push:
+        b_pool = [
+            "了解、合図は短くして進もう。",
+            "わかった。リズム維持で行く。",
+            "オーケー、隊列を詰めすぎないようにする。",
+        ]
+    elif is_fact:
+        b_pool = [
+            "了解。視界と足場を順に確認して進む。",
+            "わかった。変化があれば即共有する。",
+            "了解、観測ベースで慎重に進める。",
+        ]
+    return a_pool[rng.randrange(len(a_pool))], b_pool[rng.randrange(len(b_pool))]
 
 
 def _party_chat_entries(
     sim: RiskSimulator,
     action: Literal["trek", "rest"],
     leader_content: str,
+    member_lines: Optional[Tuple[str, str]] = None,
+    tone_hint: str = "",
 ) -> List[Dict[str, Any]]:
-    ma, mb = _party_member_lines(sim, action)
+    ma, mb = (
+        member_lines
+        if member_lines is not None
+        else _party_member_lines(sim, action, tone_hint=tone_hint)
+    )
     return [
         {
             "role": "assistant",
@@ -358,6 +536,81 @@ def _party_chat_entries(
             "action": action,
         },
     ]
+
+
+def _parse_party_chat_json(text: str) -> Optional[Tuple[str, str, str]]:
+    """leader/member_a/member_b を JSON から抽出。"""
+    if not text:
+        return None
+    t = text.strip()
+    start = t.find("{")
+    end = t.rfind("}")
+    if start < 0 or end <= start:
+        return None
+    blob = t[start : end + 1]
+    try:
+        obj = json.loads(blob)
+    except json.JSONDecodeError:
+        return None
+    leader = str(obj.get("leader", "") or "").strip()
+    ma = str(obj.get("member_a", "") or "").strip()
+    mb = str(obj.get("member_b", "") or "").strip()
+    if leader and ma and mb:
+        return leader, ma, mb
+    return None
+
+
+def _ollama_party_chat_lines(
+    sim: RiskSimulator,
+    action: Literal["trek", "rest"],
+    personality: str,
+    leader_hint: str,
+    tone_preset: str,
+    anti_repeat: str,
+) -> Optional[Tuple[str, str, str]]:
+    """3人分の会話を LLM で生成。失敗時は None。"""
+    m = sim.metrics()
+    hum = m.get("human") or {}
+    envo = m.get("env") or {}
+    pr = m.get("pressure") or {}
+    recent = sim.guide_chat[-6:]
+    recent_lines = []
+    for row in recent:
+        sp = str(row.get("speaker_label") or row.get("speaker") or "")
+        ct = str(row.get("content") or "").strip()
+        if ct:
+            recent_lines.append(f"- {sp}: {ct}")
+    recent_block = "\n".join(recent_lines) if recent_lines else "- （直近会話なし）"
+    repeat_guard_lines = _recent_lines_for_repeat_guard(sim, anti_repeat)
+    repeat_guard = "\n".join(f"- {x}" for x in repeat_guard_lines) if repeat_guard_lines else "- （なし）"
+    prompt = (
+        "あなたは登山パーティの会話生成アシスタントです。"
+        "以下の状況で、引率1行・隊員2行の自然な短い会話を作ってください。\n\n"
+        f"【引率者人格】\n{personality}\n\n"
+        f"【口調プリセット】\n{tone_preset}\n"
+        f"【重複回避の強さ】{anti_repeat}\n\n"
+        f"【このステップの行動】{action}\n"
+        f"【引率の判断理由（参考）】{leader_hint}\n\n"
+        "【数値（事実）】\n"
+        f"- step={sim.step}/{sim.max_steps}, R_obj={m.get('R_obj')}, R_subj={m.get('R_subj')}, Gap={m.get('Gap')}\n"
+        f"- 疲労={hum.get('fatigue')}, 注意散漫={hum.get('attention_loss')}, 視界={envo.get('visibility')}\n"
+        f"- 時間圧={pr.get('time')}, 外部圧={pr.get('external')}\n\n"
+        "【直近の会話（重複回避用）】\n"
+        f"{recent_block}\n\n"
+        "【なるべく言い換える対象（避けたい重複）】\n"
+        f"{repeat_guard}\n\n"
+        "【制約】\n"
+        "- 日本語。各行は25〜80文字程度。\n"
+        "- 引率は命令口調に偏りすぎず、状況判断がにじむ言い方。\n"
+        "- 隊員2人は口調を少し変える（同じ文体にしない）。\n"
+        "- 同じ表現・語尾・言い回しの連続を避ける。\n"
+        "- 危険を煽りすぎない。淡々と現場会話にする。\n"
+        "- 数値は捏造しない（本文に数値を出さなくてもよい）。\n\n"
+        "【出力】JSONのみ。キーは leader, member_a, member_b。\n"
+        '例: {"leader":"ここで短く整えてから進もう。","member_a":"助かる、足が重かった。","member_b":"了解、風と視界を先に見ておく。"}'
+    )
+    raw = _ollama_generate(prompt, num_predict=260, temperature=0.7)
+    return _parse_party_chat_json(raw or "")
 
 
 def _ollama_guide_plan_next_step(sim: RiskSimulator, personality: str) -> Tuple[Literal["trek", "rest"], str]:
@@ -442,15 +695,43 @@ def advance() -> Dict[str, Any]:
     step_override: Optional[Literal["trek", "rest"]] = None
 
     if _sim.can_advance():
+        style = _chat_style_profile()
+        tone_hint = str(style.get("tone") or "")
+        anti_repeat = str(style.get("anti_repeat") or "medium")
         if _guide_agent_enabled():
             action, reasoning = _ollama_guide_plan_next_step(_sim, _guide_personality())
             step_override = action
-            leader = reasoning.strip() if reasoning.strip() else _leader_fallback_line(action)
-            chat_entries = _party_chat_entries(_sim, action, leader)
+            llm_lines = _ollama_party_chat_lines(
+                _sim,
+                action,
+                _guide_personality(),
+                reasoning,
+                tone_preset=tone_hint,
+                anti_repeat=anti_repeat,
+            )
+            if llm_lines:
+                leader, ma, mb = llm_lines
+                chat_entries = _party_chat_entries(
+                    _sim,
+                    action,
+                    leader,
+                    member_lines=(ma, mb),
+                    tone_hint=tone_hint,
+                )
+            else:
+                leader = _leader_fallback_line(
+                    _sim, action, reasoning, tone_hint=tone_hint
+                )
+                chat_entries = _party_chat_entries(
+                    _sim, action, leader, tone_hint=tone_hint
+                )
         else:
             fb = _fallback_step_kind(_sim)
             chat_entries = _party_chat_entries(
-                _sim, fb, _leader_fallback_line(fb)
+                _sim,
+                fb,
+                _leader_fallback_line(_sim, fb, tone_hint=tone_hint),
+                tone_hint=tone_hint,
             )
 
     snap = _sim.advance(
